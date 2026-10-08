@@ -23,9 +23,6 @@ final class NotFoundHandlerTest extends TestCase
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame(
-            '{"type":"about:blank","status":404,"detail":"Endpoint not found."}',
-            (string) $response->getBody(),
-        );
+        $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
     }
 }

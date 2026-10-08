@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust;
 
-use League\Uri\UriTemplate;
+use League\Uri\UrlPattern;
 
 /**
  * @api
@@ -13,7 +13,7 @@ final readonly class Route
 {
     public function __construct(
         public Method $method,
-        public UriTemplate $template,
+        public UrlPattern $pattern,
         public RouteHandler $handler,
     ) {}
 }

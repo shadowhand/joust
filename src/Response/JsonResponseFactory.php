@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust\Response;
 
-use Crell\ApiProblem\ApiProblem;
+use Errata\Problem;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -23,9 +23,9 @@ final readonly class JsonResponseFactory
         private JsonResponseSettings $settings = new JsonResponseSettings(),
     ) {}
 
-    public function problem(ApiProblem $problem): ResponseInterface
+    public function problem(Problem $problem): ResponseInterface
     {
-        return $this->respond($problem->getStatus(), $problem, ApiProblem::CONTENT_TYPE_JSON);
+        return $this->respond($problem->status ?? 500, $problem, 'application/problem+json');
     }
 
     public function respond(int $status = 200, mixed $data = [], ?string $type = null): ResponseInterface

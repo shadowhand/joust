@@ -6,7 +6,7 @@ namespace Joust\Attribute;
 
 use Attribute;
 use Joust\Method;
-use League\Uri\UriTemplate;
+use League\Uri\UrlPattern;
 
 use function is_string;
 
@@ -14,15 +14,15 @@ use function is_string;
 final readonly class AsRoute
 {
     public Method $method;
-    public UriTemplate $template;
+    public UrlPattern $pattern;
 
     /**
      * @param Method|non-empty-string $method
-     * @param UriTemplate|string $template
+     * @param UrlPattern|string $pattern
      */
-    public function __construct(Method|string $method = Method::Get, UriTemplate|string $template = '/')
+    public function __construct(Method|string $method = Method::Get, UrlPattern|string $pattern = '/')
     {
         $this->method = is_string($method) ? Method::from($method) : $method;
-        $this->template = is_string($template) ? new UriTemplate($template) : $template;
+        $this->pattern = is_string($pattern) ? UrlPattern::from($pattern) : $pattern;
     }
 }

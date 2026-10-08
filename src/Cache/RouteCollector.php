@@ -48,7 +48,7 @@ final readonly class RouteCollector
         foreach ($attributes as $attr) {
             $route = $attr->newInstance();
 
-            yield new Route($route->method, $route->template, $handler);
+            yield new Route($route->method, $route->pattern, $handler);
         }
     }
 

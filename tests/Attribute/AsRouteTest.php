@@ -7,7 +7,7 @@ namespace Joust\Tests\Attribute;
 use Joust\Attribute\AsRoute;
 use Joust\Method;
 use Joust\Tests\TestCase;
-use League\Uri\UriTemplate;
+use League\Uri\UrlPattern;
 use PHPUnit\Framework\Attributes\CoversClass;
 use ValueError;
 
@@ -19,7 +19,7 @@ final class AsRouteTest extends TestCase
         $route = new AsRoute();
 
         $this->assertSame(Method::Get, $route->method);
-        $this->assertSame('/', (string) $route->template);
+        $this->assertSame('/', $route->pattern->path);
     }
 
     public function testNormalizesMethodAndTemplate(): void
@@ -27,7 +27,7 @@ final class AsRouteTest extends TestCase
         $route = new AsRoute(Method::Post, '/posts');
 
         $this->assertSame(Method::Post, $route->method);
-        $this->assertSame('/posts', (string) $route->template);
+        $this->assertSame('/posts', $route->pattern->path);
     }
 
     public function testNormalizesStringMethod(): void
@@ -39,11 +39,11 @@ final class AsRouteTest extends TestCase
 
     public function testAcceptsUriTemplateInstance(): void
     {
-        $template = new UriTemplate('/users/{id}');
+        $pattern = UrlPattern::from('/users/{id}');
 
-        $route = new AsRoute(Method::Get, $template);
+        $route = new AsRoute(Method::Get, $pattern);
 
-        $this->assertSame($template, $route->template);
+        $this->assertSame($pattern, $route->pattern);
     }
 
     public function testRejectsUnknownMethod(): void

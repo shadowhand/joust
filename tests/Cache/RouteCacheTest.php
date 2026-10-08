@@ -150,9 +150,7 @@ final class RouteCacheTest extends TestCase
     {
         return sort(map(
             values($routes),
-            static fn(Route $route): string => (
-                $route->method->value . ' ' . (string) $route->template . ' ' . $route->handler->name
-            ),
+            static fn(Route $route): string => "{$route->method->value} {$route->pattern->path} {$route->handler->name}",
         ));
     }
 

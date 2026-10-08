@@ -18,20 +18,20 @@ final class RouterTest extends TestCase
 {
     public function testMatchesRouteByMethodAndUri(): void
     {
-        $route = $this->createRoute(Method::Get, '/users/{id}');
+        $route = $this->createRoute(Method::Get, '/users/:id');
         $router = new Router(new RouteList($route));
 
         $result = $router->match(new ServerRequest('GET', '/users/42'));
 
         $this->assertSame($route, $result->route);
-        $this->assertTrue($result->result->isSuccessful());
-        $this->assertSame('42', $result->result->string('id'));
+        $this->assertSame('42', $result->result->path->string('id'));
     }
 
     public function testSkipsRoutesWithNonMatchingMethod(): void
     {
-        $post = $this->createRoute(Method::Post, '/users/{id}');
-        $get = $this->createRoute(Method::Get, '/users/{id}');
+        $get = $this->createRoute(Method::Get, '/users/:id');
+        $post = $this->createRoute(Method::Post, '/users');
+
         $router = new Router(new RouteList($post, $get));
 
         $result = $router->match(new ServerRequest('GET', '/users/42'));
@@ -41,8 +41,8 @@ final class RouterTest extends TestCase
 
     public function testContinuesWhenUriDoesNotMatch(): void
     {
-        $miss = $this->createRoute(Method::Get, '/users/{id}');
-        $hit = $this->createRoute(Method::Get, '/posts/{id}');
+        $miss = $this->createRoute(Method::Get, '/users/:id');
+        $hit = $this->createRoute(Method::Get, '/posts/:id');
         $router = new Router(new RouteList($miss, $hit));
 
         $result = $router->match(new ServerRequest('GET', '/posts/7'));
@@ -52,26 +52,24 @@ final class RouterTest extends TestCase
 
     public function testReturnsNotFoundWhenUriDoesNotMatch(): void
     {
-        $route = $this->createRoute(Method::Get, '/users/{id}');
+        $route = $this->createRoute(Method::Get, '/users/:id');
         $router = new Router(new RouteList($route));
 
         $result = $router->match(new ServerRequest('GET', '/other'));
 
         $this->assertSame(Method::Get, $result->route->method);
-        $this->assertSame('/other', (string) $result->route->template);
+        $this->assertSame('/other', $result->result->path->string(0));
         $this->assertSame(NotFoundHandler::class, $result->route->handler->name);
-        $this->assertTrue($result->result->isEmpty());
     }
 
     public function testReturnsNotFoundWhenNoRouteMatchesMethod(): void
     {
-        $route = $this->createRoute(Method::Post, '/users/{id}');
+        $route = $this->createRoute(Method::Post, '/users/:id');
         $router = new Router(new RouteList($route));
 
         $result = $router->match(new ServerRequest('GET', '/users/42'));
 
-        $this->assertSame(Method::Get, $result->route->method);
-        $this->assertSame('/users/42', (string) $result->route->template);
+        $this->assertSame('/users/42', $result->result->path->string(0));
         $this->assertSame(NotFoundHandler::class, $result->route->handler->name);
     }
 

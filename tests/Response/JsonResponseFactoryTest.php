@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Response;
 
-use Joust\Problem\NotFound;
+use Errata\Http\Client\NotFound;
 use Joust\Response\JsonResponseFactory;
 use Joust\Response\JsonResponseSettings;
 use Joust\Tests\TestCase;
@@ -81,9 +81,6 @@ final class JsonResponseFactoryTest extends TestCase
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame(
-            '{"type":"about:blank","status":404,"detail":"Endpoint not found."}',
-            (string) $response->getBody(),
-        );
+        $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
     }
 }

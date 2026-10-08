@@ -63,7 +63,7 @@ final class RouteCollectorTest extends TestCase
 
         $this->assertSame(Method::Get, $get->method);
         $this->assertSame(Method::Delete, $delete->method);
-        $this->assertSame('/users/{id}', (string) $get->template);
+        $this->assertSame('/users/{id}', $get->pattern->path);
         $this->assertSame(UserActions::class, $get->handler->name);
     }
 
