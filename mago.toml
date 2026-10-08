@@ -6,7 +6,7 @@ php-version = "8.4.0"
 
 [source]
 workspace = "."
-paths = ["src/", "tests/"]
+paths = ["src/", "tests/", "demo/"]
 includes = ["vendor"]
 excludes = []
 

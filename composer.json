@@ -29,6 +29,7 @@
         "captainhook/hook-installer": "^1.0",
         "carthage-software/mago": "^1.50",
         "nyholm/psr7": "^1.8",
+        "nyholm/psr7-server": "^1.1",
         "phpunit/phpunit": "^13.3",
         "rregeer/phpunit-coverage-check": "^0.3.1"
     },
@@ -40,7 +41,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Joust\\Tests\\": "tests/"
+            "Joust\\Tests\\": "tests/",
+            "Joust\\Demo\\": "demo/"
         }
     },
     "config": {
@@ -53,6 +55,7 @@
         "analyze": "mago analyze",
         "check": "mago format --check",
         "coverage": "coverage-check build/phpunit/clover.xml 100",
+        "demo": "@php -S localhost:8081 demo/router.php",
         "fix": [
             "mago lint --fix",
             "mago analyze --fix",

@@ -16,11 +16,24 @@ composer require joust/joust
 
 Early stage of development, everything is in flux!
 
+## Demo
+
+Run the todo API demo with PHP's built-in server:
+
+```sh
+composer install
+composer demo
+```
+
+Open <http://localhost:8081> to try the API from the clickable home page. Todo data persists between requests in a JSON file in the system temporary directory.
+
+The API includes `GET /todos`, `GET /todos/:id`, `POST /todos`, and `PATCH /todos/:id/complete`. The home page also demonstrates validation, not-found responses, malformed JSON, unrouted requests, and errata's exception-to-problem handling.
+
 ## Development
 
 This project uses [Mago](https://mago.carthage.software/) for lint, formatting, and static analysis.
 
-```
+```sh
 composer run fix       # automatically fix lint, analysis, and formatting issues
 composer run format    # format source code
 composer run check     # check style
