@@ -19,13 +19,13 @@ final readonly class TestContainer implements ContainerInterface
     ) {}
 
     #[Override]
-    public function get(string $id): mixed
+    public function get($id): mixed
     {
         return $this->entries[$id] ?? throw new EntryNotFound($id);
     }
 
     #[Override]
-    public function has(string $id): bool
+    public function has($id): bool
     {
         return contains_key($this->entries, $id);
     }
