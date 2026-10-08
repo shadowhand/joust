@@ -39,7 +39,7 @@ final class AsRouteTest extends TestCase
 
     public function testAcceptsUriTemplateInstance(): void
     {
-        $pattern = UrlPattern::from('/users/{id}');
+        $pattern = UrlPattern::from('/users/:id');
 
         $route = new AsRoute(Method::Get, $pattern);
 

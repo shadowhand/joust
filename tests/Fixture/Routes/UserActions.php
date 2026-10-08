@@ -12,8 +12,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/users/{id}')]
-#[AsRoute(Method::Delete, '/users/{id}')]
+#[AsRoute(Method::Get, '/users/:id')]
+#[AsRoute(Method::Delete, '/users/:id')]
 final class UserActions implements RequestHandlerInterface
 {
     #[Override]
