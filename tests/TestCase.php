@@ -7,7 +7,7 @@ namespace Joust\Tests;
 use Joust\Method;
 use Joust\Route;
 use Joust\RouteHandler;
-use Joust\RouteResult;
+use Joust\RouteMatch;
 use Joust\Tests\Fixture\TestHandler;
 use League\Uri\UrlPattern;
 use League\Uri\UrlPattern\Result;
@@ -30,14 +30,18 @@ abstract class TestCase extends PHPUnitTestCase
         return new Route($method, UrlPattern::from($pattern), new RouteHandler($handler));
     }
 
-    protected function createRouteResult(Route $route, ?Result $result = null): RouteResult
+    protected function createRouteMatch(?string $handler = null, ?Result $result = null): RouteMatch
     {
+        if (!$handler) {
+            $handler = TestHandler::class;
+        }
+
         if (!$result) {
             $result = UrlPattern::from('*')->extract('/');
 
             $this->assertInstanceOf(Result::class, $result);
         }
 
-        return new RouteResult($route, $result);
+        return new RouteMatch(new RouteHandler($handler), $result);
     }
 }

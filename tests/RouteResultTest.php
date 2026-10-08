@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Joust\Tests;
 
-use Joust\RouteResult;
+use Joust\RouteMatch;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Psl\Type\Exception\AssertException;
 
-#[CoversClass(RouteResult::class)]
+#[CoversClass(RouteMatch::class)]
 final class RouteResultTest extends TestCase
 {
     public function testInjectAddsResultAsRequestAttribute(): void
     {
-        $result = $this->createRouteResult($this->createRoute());
+        $match = $this->createRouteMatch();
 
-        $injected = $result->inject(new ServerRequest('GET', '/'));
+        $request = new ServerRequest('GET', '/')->withAttribute($match::class, $match);
 
-        $this->assertSame($result, $injected->getAttribute(RouteResult::class));
-        $this->assertSame($result, RouteResult::fromRequest($injected));
+        $this->assertSame($match, $request->getAttribute(RouteMatch::class));
+        $this->assertSame($match, RouteMatch::fromRequest($request));
     }
 
     public function testFromRequestFailsWhenAttributeIsMissing(): void
     {
         $this->expectException(AssertException::class);
 
-        RouteResult::fromRequest(new ServerRequest('GET', '/'));
+        RouteMatch::fromRequest(new ServerRequest('GET', '/'));
     }
 }

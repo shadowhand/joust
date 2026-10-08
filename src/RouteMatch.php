@@ -12,7 +12,7 @@ use function Psl\Type\instance_of;
 /**
  * @api
  */
-final readonly class RouteResult
+final readonly class RouteMatch
 {
     public static function fromRequest(ServerRequestInterface $request): self
     {
@@ -20,12 +20,7 @@ final readonly class RouteResult
     }
 
     public function __construct(
-        public Route $route,
+        public RouteHandler $handler,
         public Result $result,
     ) {}
-
-    public function inject(ServerRequestInterface $request): ServerRequestInterface
-    {
-        return $request->withAttribute(self::class, $this);
-    }
 }

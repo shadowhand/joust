@@ -8,6 +8,7 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use Override;
+use Psr\Http\Message\ServerRequestInterface;
 use Traversable;
 
 use function Psl\Iter\count;
@@ -37,5 +38,25 @@ final readonly class RouteList implements Countable, IteratorAggregate
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->items);
+    }
+
+    public function match(ServerRequestInterface $request): ?RouteMatch
+    {
+        $requestMethod = Method::fromRequest($request);
+        $requestUri = (string) $request->getUri();
+
+        foreach ($this->items as $route) {
+            if ($route->method !== $requestMethod) {
+                continue;
+            }
+
+            $result = $route->pattern->extract($requestUri);
+
+            if ($result) {
+                return new RouteMatch($route->handler, $result);
+            }
+        }
+
+        return null;
     }
 }
