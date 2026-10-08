@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Joust;
 
-use Psr\Container\ContainerInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 use function Psl\Type\class_string;
@@ -21,11 +20,5 @@ final readonly class RouteHandler
         public string $name,
     ) {
         class_string(RequestHandlerInterface::class)->assert($this->name);
-    }
-
-    public function resolve(ContainerInterface $container): RequestHandlerInterface
-    {
-        // @mago-expect analysis:mixed-return-statement
-        return $container->get($this->name);
     }
 }
