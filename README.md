@@ -16,6 +16,13 @@ composer require joust/joust
 
 Early stage of development, everything is in flux!
 
+## Documentation
+
+- [Routes](docs/routes.md): define routes, route lists, and access matched path parameters.
+- [Route discovery and caching](docs/cache.md): register handler routes with `AsRoute` and cache discovered routes.
+- [PSR-15 routing](docs/psr-15.md): use Joust as middleware or a terminal request handler.
+- [JSON responses](docs/responses.md): create JSON and problem responses and configure defaults.
+
 ## Demo
 
 Run the todo API demo with PHP's built-in server:
