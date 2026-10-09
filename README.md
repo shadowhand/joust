@@ -32,9 +32,11 @@ composer install
 composer demo
 ```
 
-Open <http://localhost:8081> to try the API from the clickable home page. Todo data persists between requests in a JSON file in the system temporary directory.
+Open <http://localhost:8081> to try the API from the clickable home page. Todo data persists between requests in a JSON
+file in the system temporary directory.
 
-The API includes `GET /todos`, `GET /todos/:id`, `POST /todos`, and `PATCH /todos/:id/complete`. The home page also demonstrates validation, not-found responses, malformed JSON, unrouted requests, and errata's exception-to-problem handling.
+The API includes `GET /todos`, `GET /todos/:id`, `POST /todos`, and `PATCH /todos/:id/complete`. The home page also
+demonstrates validation, not-found responses, malformed JSON, unrouted requests, and Errata's exception handling.
 
 ## Development
 
