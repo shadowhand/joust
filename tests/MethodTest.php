@@ -26,8 +26,14 @@ final class MethodTest extends TestCase
     public static function provideRequestMethods(): iterable
     {
         yield 'uppercase' => ['GET', Method::Get];
-        yield 'lowercase' => ['get', Method::Get];
+        yield 'lowercase' => ['put', Method::Put];
         yield 'mixed case' => ['pAtCh', Method::Patch];
         yield 'post' => ['POST', Method::Post];
+        yield 'query' => ['QUERY', Method::Query];
+        yield 'head' => ['HEAD', Method::Head];
+        yield 'delete' => ['DELETE', Method::Delete];
+        yield 'connect' => ['CONNECT', Method::Connect];
+        yield 'options' => ['OPTIONS', Method::Options];
+        yield 'trace' => ['TRACE', Method::Trace];
     }
 }
