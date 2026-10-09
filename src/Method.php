@@ -17,11 +17,12 @@ enum Method: string
     case Head = 'HEAD';
     case Post = 'POST';
     case Put = 'PUT';
+    case Patch = 'PATCH';
     case Delete = 'DELETE';
     case Connect = 'CONNECT';
     case Options = 'OPTIONS';
     case Trace = 'TRACE';
-    case Patch = 'PATCH';
+    case Query = 'QUERY';
 
     public static function fromRequest(RequestInterface $request): self
     {
