@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-12
+
 ### Changed
 
 - Replace `RoutingMiddleware` and `RoutingHandler` with `Router`, which is both PSR-15 middleware and a request handler.
@@ -17,5 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release.
 
-[Unreleased]: https://github.com/shadowhand/joust/compare/0.1.0...main
+[Unreleased]: https://github.com/shadowhand/joust/compare/0.2.0...main
+[0.2.0]: https://github.com/shadowhand/joust/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/shadowhand/joust/releases/tag/0.1.0
