@@ -6,9 +6,9 @@ namespace Joust\Demo;
 
 use Errata\Middleware\ProblemMiddleware;
 use Joust\Cache\RouteCollector;
-use Joust\Handler\RoutingHandler;
 use Joust\Response\JsonResponseFactory;
 use Joust\RouteList;
+use Joust\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -34,8 +34,11 @@ final readonly class TodoApp
         $routes = new RouteList(...values(new RouteCollector()->in(__DIR__ . '/Routes')));
 
         return new Pipeline(
-            [new ProblemMiddleware($factory, $factory), new Middleware\ParseJsonBody($json)],
-            new RoutingHandler($container, $json, $routes),
+            [
+                new ProblemMiddleware($factory, $factory),
+                new Middleware\ParseJsonBody($json),
+            ],
+            new Router($container, $json, $routes),
         );
     }
 }

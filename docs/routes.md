@@ -13,20 +13,28 @@ use Joust\Method;
 use Joust\Route;
 use Joust\RouteHandler;
 use Joust\RouteList;
-use League\Uri\UrlPattern;
+use League\Uri\UrlPatternBuilder;
+
+$pattern = new UrlPatternBuilder()
+    ->path('/todos/:id')
+    ->build();
 
 $routes = new RouteList(
-    new Route(
-        Method::Get,
-        UrlPattern::from('/todos/:id'),
-        new RouteHandler(GetTodo::class),
-    ),
+    new Route(Method::Get, $pattern, new RouteHandler(GetTodo::class)),
 );
 ```
 
-The route pattern uses League URI's URL pattern syntax. Here `:id` captures a path variable. `RouteHandler` accepts
-the class name of a PSR-15 request handler; the router resolves that class through a PSR-11 container when the
-route matches. See [PSR-15 integration](psr-15.md) for the container and request flow.
+The route pattern uses League URI's URL pattern syntax. `UrlPatternBuilder` builds a path pattern; here `:id` captures
+a path variable. Pass a base URL to match a specific origin. Without one, the path matches any host:
+
+```php
+$pattern = new UrlPatternBuilder(baseUrl: 'https://api.example.com')
+    ->path('/todos/:id')
+    ->build();
+```
+
+`RouteHandler` accepts the class name of a PSR-15 request handler; the router resolves that class through a PSR-11
+container when the route matches. See [PSR-15 integration](psr-15.md) for the container and request flow.
 
 `RouteList` is iterable and countable. Its `match()` method accepts a `ServerRequestInterface` and returns a `RouteMatch`
 or `null`:

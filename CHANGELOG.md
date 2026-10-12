@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Replace `RoutingMiddleware` and `RoutingHandler` with `Router`, which is both PSR-15 middleware and a request handler.
+- `AsRoute` builds string patterns as URL paths and accepts an optional base URL.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added

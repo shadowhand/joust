@@ -11,6 +11,7 @@ use Joust\RouteMatch;
 use Joust\Tests\Fixture\TestHandler;
 use League\Uri\UrlPattern;
 use League\Uri\UrlPattern\Result;
+use League\Uri\UrlPatternBuilder;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -26,8 +27,12 @@ abstract class TestCase extends PHPUnitTestCase
         Method $method = Method::Get,
         string $pattern = '/',
         string $handler = TestHandler::class,
+        ?string $baseUrl = null,
     ): Route {
-        return new Route($method, UrlPattern::from($pattern), new RouteHandler($handler));
+        $builder = new UrlPatternBuilder(baseUrl: $baseUrl);
+        $pattern = $builder->path($pattern)->build();
+
+        return new Route($method, $pattern, new RouteHandler($handler));
     }
 
     protected function createRouteMatch(?string $handler = null, ?Result $result = null): RouteMatch
@@ -37,7 +42,9 @@ abstract class TestCase extends PHPUnitTestCase
         }
 
         if (!$result) {
-            $result = UrlPattern::from('*')->extract('/');
+            $result = new UrlPatternBuilder()
+                ->build()
+                ->extract('/');
 
             $this->assertInstanceOf(Result::class, $result);
         }

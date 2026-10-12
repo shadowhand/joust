@@ -16,7 +16,7 @@ final class RouteTest extends TestCase
 {
     public function testExposesItsParts(): void
     {
-        $pattern = UrlPattern::from('/users/:id');
+        $pattern = UrlPattern::from('/users/:id', baseUrl: 'https://example.com');
         $handler = new RouteHandler(TestHandler::class);
         $route = new Route(Method::Get, $pattern, $handler);
 

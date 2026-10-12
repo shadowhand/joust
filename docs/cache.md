@@ -29,6 +29,13 @@ final readonly class Todos implements RequestHandlerInterface
 }
 ```
 
+The attribute takes a method and a path. Pass a base URL when the route should match a specific origin. Without one,
+the path matches any host:
+
+```php
+#[AsRoute(Method::Get, '/todos/:id', 'https://api.example.com')]
+```
+
 `RouteCollector::in()` scans the directory for instantiatable classes, skips classes that do not implement
 `RequestHandlerInterface`, and yields a route for each `AsRoute` attribute it finds. `RouteCollector::on()`
 discovers routes on a single handler class.
