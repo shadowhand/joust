@@ -42,15 +42,14 @@ final readonly class RouteList implements Countable, IteratorAggregate
 
     public function match(ServerRequestInterface $request): ?RouteMatch
     {
-        $requestMethod = Method::fromRequest($request);
-        $requestUri = (string) $request->getUri();
+        $method = Method::fromRequest($request);
 
         foreach ($this->items as $route) {
-            if ($route->method !== $requestMethod) {
+            if ($route->method !== $method) {
                 continue;
             }
 
-            $result = $route->pattern->extract($requestUri);
+            $result = $route->pattern->extract($request->getUri());
 
             if ($result) {
                 return new RouteMatch($route->handler, $result);
