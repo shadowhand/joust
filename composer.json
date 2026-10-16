@@ -12,8 +12,7 @@
     "require": {
         "php": "^8.4",
         "errata/errata": "^0.2.0",
-        "league/uri": "7.x-dev as 7.9.0",
-        "league/uri-interfaces": "7.x-dev as 7.9.0",
+        "league/uri": "^7.9.0",
         "php-standard-library/file": "^6.0",
         "php-standard-library/filesystem": "^6.0",
         "php-standard-library/json": "^6.0",
