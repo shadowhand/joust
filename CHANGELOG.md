@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-16
+
+### Changed
+
+- Require stable `league/uri` `^7.9.0` instead of the `7.x-dev` alias.
+
 ## [0.2.0] - 2026-10-12
 
 ### Changed
@@ -19,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release.
 
-[Unreleased]: https://github.com/shadowhand/joust/compare/0.2.0...main
+[Unreleased]: https://github.com/shadowhand/joust/compare/0.2.1...main
+[0.2.1]: https://github.com/shadowhand/joust/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/shadowhand/joust/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/shadowhand/joust/releases/tag/0.1.0
