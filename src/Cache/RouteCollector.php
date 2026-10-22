@@ -6,6 +6,7 @@ namespace Joust\Cache;
 
 use Generator;
 use Joust\Attribute\AsRoute;
+use Joust\Attribute\Middleware;
 use Joust\Route;
 use Joust\RouteHandler;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -42,10 +43,13 @@ final readonly class RouteCollector
     public function on(string $class): iterable
     {
         $handler = new RouteHandler($class);
+        $reflection = new ReflectionClass($class);
 
-        $attributes = new ReflectionClass($class)->getAttributes(AsRoute::class);
+        foreach ($reflection->getAttributes(Middleware::class) as $attr) {
+            $handler = $handler->withMiddleware($attr->newInstance()->name);
+        }
 
-        foreach ($attributes as $attr) {
+        foreach ($reflection->getAttributes(AsRoute::class) as $attr) {
             $route = $attr->newInstance();
 
             yield new Route($route->method, $route->pattern, $handler);

@@ -38,7 +38,8 @@ the path matches any host:
 
 `RouteCollector::in()` scans the directory for instantiatable classes, skips classes that do not implement
 `RequestHandlerInterface`, and yields a route for each `AsRoute` attribute it finds. `RouteCollector::on()`
-discovers routes on a single handler class.
+discovers routes on a single handler class. It also reads `#[Middleware]` attributes on the class; see
+[Route middleware](psr-15.md#route-middleware).
 
 ## Create and read a route cache
 

@@ -20,7 +20,8 @@ Early stage of development, everything is in flux!
 
 - [Routes](docs/routes.md): define routes, route lists, and access matched path parameters.
 - [Route discovery and caching](docs/cache.md): register handler routes with `AsRoute` and cache discovered routes.
-- [Applications and PSR-15 routing](docs/psr-15.md): build an application from middleware and routes.
+- [Applications and PSR-15 routing](docs/psr-15.md): build an application from middleware and routes, and add
+  middleware to individual route handlers.
 - [JSON responses](docs/responses.md): create JSON and problem responses and configure defaults.
 
 ## Demo
