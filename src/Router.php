@@ -11,6 +11,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
+use function Psl\Vec\map;
+
 /**
  * @api
  */
@@ -32,7 +34,17 @@ final readonly class Router implements MiddlewareInterface
 
         $request = $request->withAttribute(RouteMatch::class, $match);
 
-        return $this->resolve($match->handler)->handle($request);
+        return $this->pipeline($match->handler)->handle($request);
+    }
+
+    private function pipeline(RouteHandler $handler): RequestHandlerInterface
+    {
+        $middleware = map(
+            $handler->middleware,
+            fn(string $name): MiddlewareInterface => new LazyMiddleware($this->container, $name),
+        );
+
+        return new Pipeline($middleware, $this->resolve($handler));
     }
 
     private function resolve(RouteHandler $handler): RequestHandlerInterface

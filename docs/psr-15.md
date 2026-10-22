@@ -73,6 +73,43 @@ request attribute. A handler can retrieve the matched route and its captured pat
 If no route matches, the router passes the unchanged request to the next handler, allowing later middleware or the
 fallback handler to respond.
 
+## Route middleware
+
+Middleware can also be added to the routes of a single handler. Declare it on the handler class with the repeatable
+`#[Middleware]` attribute; the route collector reads it along with `#[AsRoute]`, and route caches keep it:
+
+```php
+use Acme\Middleware\ParseJsonBody; // your own PSR-15 middleware
+use Acme\Middleware\RequireAuth;
+use Joust\Attribute\AsRoute;
+use Joust\Attribute\Middleware;
+use Joust\Method;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[AsRoute(Method::Post, '/todos')]
+#[Middleware(RequireAuth::class)]
+#[Middleware(ParseJsonBody::class)]
+final readonly class CreateTodo implements RequestHandlerInterface
+{
+    // ...
+}
+```
+
+For routes defined directly, pass middleware class names to `RouteHandler`, or add them with `withMiddleware()`, which
+returns a copy:
+
+```php
+use Joust\RouteHandler;
+
+$handler = new RouteHandler(CreateTodo::class, RequireAuth::class);
+$handler = $handler->withMiddleware(ParseJsonBody::class);
+```
+
+When a route matches, the router runs its middleware in the order it was declared, then the handler. Route middleware
+runs after the application middleware added before the router, and after the `RouteMatch` attribute is added, so it
+can read the matched route. Each middleware is resolved from the container when a request reaches it; register it
+there along with the routed handlers.
+
 ## Without an application
 
 `Router` is standard PSR-15 middleware and `Pipeline` runs a list of middleware before a request handler, so both can

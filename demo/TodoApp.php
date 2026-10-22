@@ -28,9 +28,9 @@ final readonly class TodoApp
             Routes\Crash::class => new Routes\Crash(),
         ]);
 
-        return new App($container, new NotFoundHandler($json))
-            ->add(new ProblemMiddleware($factory, $factory))
-            ->add(Middleware\ParseJsonBody::class)
-            ->collectRoutes(__DIR__ . '/Routes');
+        return new App($container, new NotFoundHandler($json))->add(new ProblemMiddleware(
+            $factory,
+            $factory,
+        ))->collectRoutes(__DIR__ . '/Routes');
     }
 }

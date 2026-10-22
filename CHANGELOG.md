@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Router` for them.
 - `Pipeline`, which runs a list of middleware before a request handler.
 - `NotFoundHandler`, which responds with a not found problem.
+- Route middleware: `RouteHandler` holds a list of middleware class names, with `withMiddleware()` to add more, and the
+  repeatable `#[Middleware]` attribute declares it on handler classes. `RouteCollector` reads the attribute, route
+  caches keep it, and `Router` runs a matched route's middleware in declared order before its handler.
 
 ### Changed
 

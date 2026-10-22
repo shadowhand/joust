@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Cache;
 
+use Errata\Middleware\ProblemMiddleware;
 use Joust\Cache\RouteCache;
 use Joust\Cache\RouteCollector;
 use Joust\Route;
 use Joust\Tests\Fixture\Routes\GetUsers;
 use Joust\Tests\Fixture\Routes\UserActions;
+use Joust\Tests\Fixture\TraceMiddleware;
 use Joust\Tests\TestCase;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -45,6 +47,22 @@ final class RouteCacheTest extends TestCase
         $handlers = sort(map($list, static fn(Route $route): string => $route->handler->name));
 
         $this->assertSame([GetUsers::class, UserActions::class, UserActions::class], $handlers);
+    }
+
+    public function testItCarriesHandlerMiddlewareThroughTheCache(): void
+    {
+        $cache = new RouteCache(new RouteCollector());
+
+        $cache->write(self::DIRECTORY, self::CACHE);
+
+        $middleware = [];
+
+        foreach ($cache->read(self::CACHE) as $route) {
+            $middleware[$route->handler->name] = $route->handler->middleware;
+        }
+
+        $this->assertSame([], $middleware[GetUsers::class] ?? null);
+        $this->assertSame([TraceMiddleware::class, ProblemMiddleware::class], $middleware[UserActions::class] ?? null);
     }
 
     public function testInYieldsNothingWhenDirectoryHasNoHandlers(): void

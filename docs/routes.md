@@ -35,7 +35,8 @@ $pattern = new UrlPatternBuilder(baseUrl: 'https://api.example.com')
 
 `RouteHandler` accepts the class name of a PSR-15 request handler; the router resolves that class through a PSR-11
 container when the route matches. See [Applications and PSR-15 routing](psr-15.md) for the container and request
-flow.
+flow. A `RouteHandler` can also list middleware to run before the handler; see
+[Route middleware](psr-15.md#route-middleware).
 
 `RouteList` is iterable and countable. Its `match()` method accepts a `ServerRequestInterface` and returns a `RouteMatch`
 or `null`:

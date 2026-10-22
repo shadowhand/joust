@@ -6,6 +6,8 @@ namespace Joust\Demo\Routes;
 
 use Errata\Http\Client\UnprocessableContent;
 use Joust\Attribute\AsRoute;
+use Joust\Attribute\Middleware;
+use Joust\Demo\Middleware\ParseJsonBody;
 use Joust\Demo\TodoStore;
 use Joust\Method;
 use Joust\Response\JsonResponseFactory;
@@ -19,6 +21,7 @@ use function is_string;
 use function Psl\Str\trim;
 
 #[AsRoute(Method::Post, '/todos')]
+#[Middleware(ParseJsonBody::class)]
 final readonly class CreateTodo implements RequestHandlerInterface
 {
     public function __construct(
