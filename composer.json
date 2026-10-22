@@ -12,7 +12,9 @@
     "require": {
         "php": "^8.4",
         "errata/errata": "^0.2.0",
+        "http-interop/response-sender": "^1.1",
         "league/uri": "^7.9.0",
+        "nyholm/psr7-server": "^1.1",
         "php-standard-library/file": "^6.0",
         "php-standard-library/filesystem": "^6.0",
         "php-standard-library/json": "^6.0",
@@ -29,10 +31,12 @@
         "captainhook/captainhook": "^5.29",
         "captainhook/hook-installer": "^1.0",
         "carthage-software/mago": "^1.50",
-        "nyholm/psr7": "^1.8",
-        "nyholm/psr7-server": "^1.1",
+        "nyholm/psr7": "^1.8.2",
         "phpunit/phpunit": "^13.3",
         "rregeer/phpunit-coverage-check": "^0.3.1"
+    },
+    "suggest": {
+        "nyholm/psr7": "A fast PSR-7 and PSR-17 implementation; one factory object provides every factory App needs"
     },
     "prefer-stable": true,
     "autoload": {

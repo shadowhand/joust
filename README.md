@@ -12,16 +12,37 @@
 composer require joust/joust
 ```
 
+Joust requires PSR interfaces only. Install a PSR-7 and PSR-17 implementation too, for example:
+
+```sh
+composer require nyholm/psr7
+```
+
 ## Usage
 
 Early stage of development, everything is in flux!
+
+Create an application, add middleware and routes, and run it from your front controller:
+
+```php
+use Errata\Middleware\ProblemMiddleware;
+use Joust\App;
+use Nyholm\Psr7\Factory\Psr17Factory;
+
+$app = new App($container, new Psr17Factory()); // any PSR-11 container and PSR-17 factory
+$app->add(ProblemMiddleware::class);
+$app->collectRoutes(__DIR__ . '/../src/Routes');
+$app->run();
+```
+
+Route handlers are PSR-15 request handlers with `#[AsRoute]` attributes. See the documentation below for details.
 
 ## Documentation
 
 - [Routes](docs/routes.md): define routes, route lists, and access matched path parameters.
 - [Route discovery and caching](docs/cache.md): register handler routes with `AsRoute` and cache discovered routes.
-- [Applications and PSR-15 routing](docs/psr-15.md): build an application from middleware and routes, and add
-  middleware to individual route handlers.
+- [Applications and PSR-15 routing](docs/psr-15.md): build and run an application from middleware and routes, and
+  add middleware to individual route handlers.
 - [JSON responses](docs/responses.md): create JSON and problem responses and configure defaults.
 
 ## Demo
