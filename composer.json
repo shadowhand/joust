@@ -20,7 +20,9 @@
         "php-standard-library/vec": "^6.0",
         "psr/container": "^1.0 || ^2.0",
         "psr/http-factory": "^1.1",
+        "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0",
         "wyrihaximus/list-classes-in-directory": "^1.7"
     },
     "require-dev": {

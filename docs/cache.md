@@ -61,6 +61,20 @@ if (!is_file($cacheFile)) {
 $routes = $cache->read($cacheFile);
 ```
 
+An `App` can do this in one step. `cacheRoutes()` reads the cache file when it exists, otherwise writes it, and then
+adds a `Router` for the cached routes:
+
+```php
+$app->cacheRoutes(__DIR__ . '/../src', __DIR__ . '/var/cache/routes.phpcache');
+```
+
+Use `collectRoutes()` instead to discover routes on every request without a cache:
+
+```php
+$app->collectRoutes(__DIR__ . '/../src');
+```
+
 Regenerate the cache when route attributes or handler classes change (for example, as part of deployment). The cache
 is PHP-serialized data; only read cache files created and controlled by your application. For how to pass the resulting
-`RouteList` to a router, see [PSR-15 integration](psr-15.md). For manually defined routes, see [Routes](routes.md).
+`RouteList` to a router, see [Applications and PSR-15 routing](psr-15.md). For manually defined routes, see
+[Routes](routes.md).

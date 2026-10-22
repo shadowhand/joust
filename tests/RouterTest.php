@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Joust\Tests;
 
 use Joust\Method;
-use Joust\Response\JsonResponseFactory;
 use Joust\RouteList;
 use Joust\RouteMatch;
 use Joust\Router;
@@ -18,7 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass(Router::class)]
 final class RouterTest extends TestCase
 {
-    public function testShouldActAsPsrHandler(): void
+    public function testShouldDispatchMatchedRoute(): void
     {
         $factory = new Psr17Factory();
         $handler = new TestHandler($factory);
@@ -26,27 +25,7 @@ final class RouterTest extends TestCase
 
         $routes = new RouteList($this->createRoute(Method::Get, '/users/:id'));
 
-        $router = new Router($container, new JsonResponseFactory($factory, $factory), $routes);
-
-        $response = $router->handle(new ServerRequest('GET', '/users/42'));
-
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertNotNull($handler->request);
-
-        $result = RouteMatch::fromRequest($handler->request);
-
-        $this->assertSame(TestHandler::class, $result->handler->name);
-    }
-
-    public function testShouldActAsPsrMiddleware(): void
-    {
-        $factory = new Psr17Factory();
-        $handler = new TestHandler($factory);
-        $container = new TestContainer([TestHandler::class => $handler]);
-
-        $routes = new RouteList($this->createRoute(Method::Get, '/users/:id'));
-
-        $router = new Router($container, new JsonResponseFactory($factory, $factory), $routes);
+        $router = new Router($container, $routes);
 
         $next = new TestHandler($factory);
 
@@ -61,26 +40,11 @@ final class RouterTest extends TestCase
         $this->assertSame(TestHandler::class, $result->handler->name);
     }
 
-    public function testShouldReturnNotFoundAsHandler(): void
+    public function testShouldPassThroughWhenNoRouteMatches(): void
     {
         $factory = new Psr17Factory();
-        $container = new TestContainer();
 
-        $router = new Router($container, new JsonResponseFactory($factory, $factory), new RouteList());
-
-        $response = $router->handle(new ServerRequest('GET', '/'));
-
-        $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
-    }
-
-    public function testShouldPassThroughAsMiddleware(): void
-    {
-        $factory = new Psr17Factory();
-        $container = new TestContainer();
-
-        $router = new Router($container, new JsonResponseFactory($factory, $factory), new RouteList());
+        $router = new Router(new TestContainer(), new RouteList());
 
         $next = new TestHandler($factory);
 
