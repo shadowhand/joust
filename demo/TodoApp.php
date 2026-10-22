@@ -6,7 +6,6 @@ namespace Joust\Demo;
 
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
-use Joust\NotFoundHandler;
 use Joust\Response\JsonResponseFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
@@ -28,9 +27,7 @@ final readonly class TodoApp
             Routes\Crash::class => new Routes\Crash(),
         ]);
 
-        return new App($container, new NotFoundHandler($json))->add(new ProblemMiddleware(
-            $factory,
-            $factory,
-        ))->collectRoutes(__DIR__ . '/Routes');
+        return new App($container, $factory)->add(new ProblemMiddleware($factory, $factory))->collectRoutes(__DIR__
+        . '/Routes');
     }
 }

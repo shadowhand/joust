@@ -6,14 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-22
+
 ### Added
 
 - `App`, which runs middleware in the order it is added and then a fallback handler. Middleware can be added as an
-  instance or as a class name resolved lazily from the container.
+  instance or as a class name resolved lazily from the container. It takes a PSR-11 container and a PSR-17 factory that
+  creates responses, streams, server requests, URIs, and uploaded files.
 - `App::collectRoutes()` and `App::cacheRoutes()` to discover routes, optionally through a route cache, and add a
   `Router` for them.
 - `Pipeline`, which runs a list of middleware before a request handler.
 - `NotFoundHandler`, which responds with a not found problem.
+- `App::run()`, which creates the request from globals with the `nyholm/psr7-server` `ServerRequestCreator`, using the
+  application's factory, and sends the response with an `Emitter`. Both can be replaced through the constructor.
+- `Emitter` interface and `SapiEmitter`, which sends a response with `http-interop/response-sender` and throws when
+  headers were already sent or output is already buffered.
+- `App` uses a `NotFoundHandler` built with its factory as the fallback unless another handler is given.
 - Route middleware: `RouteHandler` holds a list of middleware class names, with `withMiddleware()` to add more, and the
   repeatable `#[Middleware]` attribute declares it on handler classes. `RouteCollector` reads the attribute, route
   caches keep it, and `Router` runs a matched route's middleware in declared order before its handler.
@@ -23,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `Router` is middleware only. It no longer implements `RequestHandlerInterface` or takes a `JsonResponseFactory`; use
   `NotFoundHandler` as the fallback instead.
 - Require `psr/http-message` and `psr/http-server-middleware` directly.
+- Require `nyholm/psr7-server` and `http-interop/response-sender`. Joust needs no PSR-7 implementation at runtime;
+  `nyholm/psr7` is suggested.
 
 ## [0.2.1] - 2026-10-16
 
@@ -43,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release.
 
-[Unreleased]: https://github.com/shadowhand/joust/compare/0.2.1...main
+[Unreleased]: https://github.com/shadowhand/joust/compare/0.3.0...main
+[0.3.0]: https://github.com/shadowhand/joust/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/shadowhand/joust/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/shadowhand/joust/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/shadowhand/joust/releases/tag/0.1.0

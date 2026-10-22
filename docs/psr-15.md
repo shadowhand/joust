@@ -8,37 +8,35 @@ application like any other middleware.
 
 ## Create an application
 
-`App` takes a [PSR-11][] container and a fallback handler. `NotFoundHandler` responds with a JSON problem response
-with status 404, which makes it a good fallback when no route matches.
+`App` takes a [PSR-11][] container and a [PSR-17][] factory. Middleware and routes are added to it, and `run()` handles
+the current request and sends the response:
 
 [PSR-11]: https://www.php-fig.org/psr/psr-11/
+[PSR-17]: https://www.php-fig.org/psr/psr-17/
 
 ```php
+// public/index.php
 use Acme\Middleware\ParseJsonBody; // your own PSR-15 middleware
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
-use Joust\NotFoundHandler;
-use Joust\Response\JsonResponseFactory;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
 
 /** @var ContainerInterface $container */
-/** @var ResponseFactoryInterface $responseFactory */
-/** @var StreamFactoryInterface $streamFactory */
-$json = new JsonResponseFactory($responseFactory, $streamFactory);
+$factory = new Psr17Factory();
 
-$app = new App($container, new NotFoundHandler($json));
-$app->add(new ProblemMiddleware($responseFactory, $streamFactory));
+$app = new App($container, $factory);
+$app->add(new ProblemMiddleware($factory, $factory));
 $app->add(ParseJsonBody::class);
-$app->collectRoutes(__DIR__ . '/src/Routes');
-
-$response = $app->handle($request);
+$app->collectRoutes(__DIR__ . '/../src/Routes');
+$app->run();
 ```
 
-`$responseFactory` and `$streamFactory` are [PSR-17][] implementations.
-
-[PSR-17]: https://www.php-fig.org/psr/psr-17/
+The factory must create responses, streams, server requests, URIs, and uploaded files. Joust does not depend on any
+PSR-7 implementation; any package with a factory that implements all five PSR-17 interfaces works, such as
+`Nyholm\Psr7\Factory\Psr17Factory` from `nyholm/psr7` or `GuzzleHttp\Psr7\HttpFactory` from `guzzlehttp/psr7`.
+Implementations with a separate class per factory, such as Laminas Diactoros, need a small class that implements the
+five interfaces and delegates to each factory.
 
 `add()` accepts a middleware instance or the class name of a middleware. A class name is resolved from the container
 when a request reaches it, so middleware that is never reached is never created. `add()`, `collectRoutes()`, and
@@ -47,7 +45,68 @@ when a request reaches it, so middleware that is never reached is never created.
 The first middleware added is the outermost: it sees the request first and the response last. `App` does not catch
 exceptions; add an error middleware such as Errata's `ProblemMiddleware` first so that it wraps everything else.
 
-`App` is itself a request handler. Call `handle()` with a PSR-7 server request to get a response.
+## Fallback handler
+
+When no middleware responds, for example because no route matches, `App` calls its fallback handler. By default this
+is a `NotFoundHandler`, built with the application's factory, which responds with a JSON problem response with status
+404. Pass another request handler as the third argument to replace it:
+
+```php
+use Joust\App;
+use Joust\NotFoundHandler;
+use Joust\Response\JsonResponseFactory;
+use Joust\Response\JsonResponseSettings;
+use Nyholm\Psr7\Factory\Psr17Factory;
+
+$factory = new Psr17Factory();
+$json = new JsonResponseFactory($factory, $factory, new JsonResponseSettings(pretty: true));
+
+$app = new App($container, $factory, new NotFoundHandler($json));
+```
+
+## Run and handle requests
+
+`run()` creates a PSR-7 server request from the PHP globals with the `ServerRequestCreator` from `nyholm/psr7-server`,
+using the application's factory. It passes the request through the application and sends the response with
+`Joust\Response\SapiEmitter`, which uses [http-interop/response-sender][response-sender]. Before sending,
+`SapiEmitter` throws a `RuntimeException` if headers were already sent, naming the file and line where output started,
+or if any output is waiting in an output buffer.
+
+[response-sender]: https://github.com/http-interop/response-sender
+
+Pass your own `ServerRequestCreatorInterface` or `Joust\Response\Emitter` to the constructor to change either step:
+
+```php
+use Joust\Response\Emitter;
+use Joust\Response\SapiEmitter;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
+
+final class LoggingEmitter implements Emitter
+{
+    public function __construct(
+        private readonly Emitter $emitter,
+        private readonly LoggerInterface $logger,
+    ) {}
+
+    public function emit(ResponseInterface $response): void
+    {
+        $this->logger->info('Sending response', ['status' => $response->getStatusCode()]);
+        $this->emitter->emit($response);
+    }
+}
+
+$app = new App($container, $factory, emitter: new LoggingEmitter(new SapiEmitter(), $logger));
+```
+
+`App` is itself a [PSR-15][] request handler. Call `handle()` with a server request to get a response without touching
+globals or sending output, for example in tests:
+
+```php
+use Nyholm\Psr7\ServerRequest;
+
+$response = $app->handle(new ServerRequest('GET', '/todos'));
+```
 
 ## Add routes
 

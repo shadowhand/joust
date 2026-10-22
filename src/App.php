@@ -6,10 +6,20 @@ namespace Joust;
 
 use Joust\Cache\RouteCache;
 use Joust\Cache\RouteCollector;
+use Joust\Response\Emitter;
+use Joust\Response\JsonResponseFactory;
+use Joust\Response\SapiEmitter;
+use Nyholm\Psr7Server\ServerRequestCreator;
+use Nyholm\Psr7Server\ServerRequestCreatorInterface;
 use Override;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UploadedFileFactoryInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -27,10 +37,22 @@ final class App implements RequestHandlerInterface
     /** @var list<MiddlewareInterface> */
     private array $middleware = [];
 
+    private readonly RequestHandlerInterface $fallback;
+    private readonly ServerRequestCreatorInterface $requestCreator;
+
+    /**
+     * The PSR-17 factory builds the default `NotFoundHandler` fallback and the requests created from globals.
+     */
     public function __construct(
         private readonly ContainerInterface $container,
-        private readonly RequestHandlerInterface $fallback,
-    ) {}
+        ResponseFactoryInterface&ServerRequestFactoryInterface&StreamFactoryInterface&UploadedFileFactoryInterface&UriFactoryInterface $factory,
+        ?RequestHandlerInterface $fallback = null,
+        ?ServerRequestCreatorInterface $requestCreator = null,
+        private readonly Emitter $emitter = new SapiEmitter(),
+    ) {
+        $this->fallback = $fallback ?? new NotFoundHandler(new JsonResponseFactory($factory, $factory));
+        $this->requestCreator = $requestCreator ?? new ServerRequestCreator($factory, $factory, $factory, $factory);
+    }
 
     /**
      * Add middleware to the end of the pipeline. A class name is resolved from the container when a request reaches it.
@@ -79,5 +101,13 @@ final class App implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         return new Pipeline($this->middleware, $this->fallback)->handle($request);
+    }
+
+    /**
+     * Handle the request created from globals and emit the response.
+     */
+    public function run(): void
+    {
+        $this->emitter->emit($this->handle($this->requestCreator->fromGlobals()));
     }
 }

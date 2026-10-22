@@ -11,11 +11,14 @@ use Joust\NotFoundHandler;
 use Joust\Response\JsonResponseFactory;
 use Joust\Tests\Fixture\Routes\GetUsers;
 use Joust\Tests\Fixture\TestContainer;
+use Joust\Tests\Fixture\TestEmitter;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\Fixture\TraceMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
+use Nyholm\Psr7Server\ServerRequestCreator;
 use Override;
+use PHPUnit\Framework\Attributes\BackupGlobals;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 use function Psl\Filesystem\delete_file;
@@ -51,6 +54,40 @@ final class AppTest extends TestCase
         $response = $this->createApp()->handle(new ServerRequest('GET', '/'));
 
         $this->assertSame(404, $response->getStatusCode());
+    }
+
+    public function testItDefaultsToANotFoundFallback(): void
+    {
+        $response = new App(new TestContainer(), $this->factory)->handle(new ServerRequest('GET', '/'));
+
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
+    }
+
+    #[BackupGlobals(true)]
+    public function testItRunsTheRequestFromGlobals(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/users';
+
+        $emitter = new TestEmitter();
+
+        $app = new App(new TestContainer([GetUsers::class => $this->handler]), $this->factory, emitter: $emitter);
+        $app->collectRoutes(self::DIRECTORY)->run();
+
+        $this->assertNotNull($this->handler->request);
+        $this->assertSame('/users', $this->handler->request->getUri()->getPath());
+        $this->assertSame(200, $emitter->response?->getStatusCode());
+    }
+
+    public function testItRunsTheRequestFromTheRequestCreator(): void
+    {
+        $emitter = new TestEmitter();
+        $creator = new ServerRequestCreator($this->factory, $this->factory, $this->factory, $this->factory);
+
+        new App(new TestContainer(), $this->factory, requestCreator: $creator, emitter: $emitter)->run();
+
+        $this->assertSame(404, $emitter->response?->getStatusCode());
     }
 
     public function testItRunsMiddlewareInTheOrderAdded(): void
@@ -115,6 +152,10 @@ final class AppTest extends TestCase
     {
         $container ??= new TestContainer([GetUsers::class => $this->handler]);
 
-        return new App($container, new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)));
+        return new App(
+            $container,
+            $this->factory,
+            new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)),
+        );
     }
 }
