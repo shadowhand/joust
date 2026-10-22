@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Joust\Demo;
+namespace Joust;
 
 use Override;
 use Psr\Http\Message\ResponseInterface;
@@ -12,6 +12,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 use function Psl\Vec\reverse;
 
+/**
+ * Runs a list of middleware in order, ending with a request handler.
+ *
+ * @api
+ */
 final readonly class Pipeline implements RequestHandlerInterface
 {
     /**

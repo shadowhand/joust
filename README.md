@@ -20,7 +20,7 @@ Early stage of development, everything is in flux!
 
 - [Routes](docs/routes.md): define routes, route lists, and access matched path parameters.
 - [Route discovery and caching](docs/cache.md): register handler routes with `AsRoute` and cache discovered routes.
-- [PSR-15 routing](docs/psr-15.md): use Joust as middleware or a terminal request handler.
+- [Applications and PSR-15 routing](docs/psr-15.md): build an application from middleware and routes.
 - [JSON responses](docs/responses.md): create JSON and problem responses and configure defaults.
 
 ## Demo

@@ -5,24 +5,21 @@ declare(strict_types=1);
 namespace Joust\Demo;
 
 use Errata\Middleware\ProblemMiddleware;
-use Joust\Cache\RouteCollector;
+use Joust\App;
+use Joust\NotFoundHandler;
 use Joust\Response\JsonResponseFactory;
-use Joust\RouteList;
-use Joust\Router;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Server\RequestHandlerInterface;
-
-use function Psl\Vec\values;
 
 final readonly class TodoApp
 {
-    public static function create(): RequestHandlerInterface
+    public static function create(): App
     {
         $factory = new Psr17Factory();
         $store = new TodoStore();
         $json = new JsonResponseFactory($factory, $factory);
         $container = new Container([
             JsonResponseFactory::class => $json,
+            Middleware\ParseJsonBody::class => new Middleware\ParseJsonBody($json),
             Routes\Home::class => new Routes\Home($factory, $factory),
             Routes\ListTodos::class => new Routes\ListTodos($store, $json),
             Routes\GetTodo::class => new Routes\GetTodo($store, $json),
@@ -31,14 +28,9 @@ final readonly class TodoApp
             Routes\Crash::class => new Routes\Crash(),
         ]);
 
-        $routes = new RouteList(...values(new RouteCollector()->in(__DIR__ . '/Routes')));
-
-        return new Pipeline(
-            [
-                new ProblemMiddleware($factory, $factory),
-                new Middleware\ParseJsonBody($json),
-            ],
-            new Router($container, $json, $routes),
-        );
+        return new App($container, new NotFoundHandler($json))
+            ->add(new ProblemMiddleware($factory, $factory))
+            ->add(Middleware\ParseJsonBody::class)
+            ->collectRoutes(__DIR__ . '/Routes');
     }
 }

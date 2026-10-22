@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Joust\Demo;
+namespace Joust;
 
 use Override;
 use Psr\Http\Message\ResponseInterface;
@@ -11,8 +11,10 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Adapts a middleware + the next handler into a request handler, so a list of
+ * Adapts a middleware and the next handler into a request handler, so a list of
  * middleware can be folded into a single pipeline.
+ *
+ * @internal
  */
 final readonly class MiddlewareHandler implements RequestHandlerInterface
 {
