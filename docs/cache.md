@@ -1,8 +1,7 @@
 # Route discovery and caching
 
-Instead of constructing each `Route` manually, annotate [PSR-15][] handler classes with `#[AsRoute]` and
-let `RouteCollector` discover them. The attribute is repeatable, so one handler class can serve more than
-one method or pattern.
+Instead of constructing each `Route` manually, annotate [PSR-15][] handler classes with `#[AsRoute]` and let a route
+locator discover them. The attribute is repeatable, so one handler class can serve more than one method or pattern.
 
 [PSR-15]: https://www.php-fig.org/psr/psr-15/
 
@@ -36,44 +35,62 @@ the path matches any host:
 #[AsRoute(Method::Get, '/todos/:id', 'https://api.example.com')]
 ```
 
-`RouteCollector::in()` scans the directory for instantiatable classes, skips classes that do not implement
-`RequestHandlerInterface`, and yields a route for each `AsRoute` attribute it finds. `RouteCollector::on()`
-discovers routes on a single handler class. It also reads `#[Middleware]` attributes on the class; see
+## Discovery
+
+`RouteLocator` scans a directory for instantiatable classes, skips classes that do not implement
+`RequestHandlerInterface`, and reads each handler's attributes:
+
+```php
+use Joust\Locator\RouteLocator;
+
+$routes = new RouteLocator(__DIR__ . '/../src');
+```
+
+`RouteReader` does the same for a single handler class:
+
+```php
+use Joust\Locator\RouteReader;
+
+$routes = new RouteReader(Todos::class);
+```
+
+Both implement `RouteList`, so they can be passed directly to a `RouteMatcher` or a
+[`Router`](psr-15.md#add-routes). The readers also pick up `#[Middleware]` attributes on the handler class; see
 [Route middleware](psr-15.md#route-middleware).
 
 ## Create and read a route cache
 
-`RouteCache` uses a collector to scan a source directory and serializes the resulting `RouteList` to a file.
-On application startup, read the cached list when it exists; otherwise write it and then read it:
+`RouteCache` materializes any `RouteList` into a `RouteCollection` and serializes it to a file; `read()` unserializes
+the file back into that collection:
 
 ```php
-use Joust\Cache\RouteCache;
-use Joust\Cache\RouteCollector;
-use Joust\RouteList;
+use Joust\Locator\RouteCache;
+use Joust\Locator\RouteLocator;
 
-$cache = new RouteCache(new RouteCollector());
-$cacheFile = __DIR__ . '/var/cache/routes.phpcache';
+$cacheFile = __DIR__ . '/../var/cache/routes.phpcache';
 
-if (!is_file($cacheFile)) {
-    $cache->write(__DIR__ . '/../src', $cacheFile);
-}
+$cache = new RouteCache();
+$cache->write(new RouteLocator(__DIR__ . '/../src'), $cacheFile);
 
-/** @var RouteList $routes */
+// On a later request, or in production:
 $routes = $cache->read($cacheFile);
 ```
 
-An `App` can do this in one step. `cacheRoutes()` reads the cache file when it exists, otherwise writes it, and then
-adds a `Router` for the cached routes:
+An `App` can generate the cache in one step. Passing a cache file to `collectRoutes()` discovers the routes, writes
+them to the file, and adds a `Router` for the discovered routes. Call it from a build or deployment script to
+regenerate the cache:
 
 ```php
-$app->cacheRoutes(__DIR__ . '/../src', __DIR__ . '/var/cache/routes.phpcache');
+$app->collectRoutes(__DIR__ . '/../src', __DIR__ . '/../var/cache/routes.phpcache');
 ```
 
-Use `collectRoutes()` instead to discover routes on every request without a cache:
+At runtime, `cachedRoutes()` adds a `Router` for the routes in an existing cache file:
 
 ```php
-$app->collectRoutes(__DIR__ . '/../src');
+$app->cachedRoutes(__DIR__ . '/../var/cache/routes.phpcache');
 ```
+
+Use `collectRoutes(__DIR__ . '/../src')` without a cache file to discover routes on every request.
 
 Regenerate the cache when route attributes or handler classes change (for example, as part of deployment). The cache
 is PHP-serialized data; only read cache files created and controlled by your application. For how to pass the resulting

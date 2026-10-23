@@ -2,24 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Joust\Cache;
+namespace Joust\Locator;
 
+use Joust\RouteCollection;
 use Joust\RouteList;
 
 use function Psl\File\read;
 use function Psl\File\write;
 use function Psl\Filesystem\create_directory_for_file;
 use function Psl\Type\instance_of;
-use function Psl\Vec\values;
 use function serialize;
 use function unserialize;
 
+/**
+ * Reads and writes a route cache.
+ *
+ * @api
+ */
 final readonly class RouteCache
 {
-    public function __construct(
-        private RouteCollector $collector,
-    ) {}
-
     /**
      * @param non-empty-string $file
      */
@@ -31,12 +32,14 @@ final readonly class RouteCache
     /**
      * @param non-empty-string $file
      */
-    public function write(string $source, string $file): void
+    public function write(RouteList $routes, string $file): RouteList
     {
         create_directory_for_file($file);
 
-        $routes = new RouteList(...values($this->collector->in($source)));
+        $list = new RouteCollection(...$routes);
 
-        write($file, serialize($routes));
+        write($file, serialize($list));
+
+        return $list;
     }
 }

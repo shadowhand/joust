@@ -13,6 +13,12 @@ use function Psl\Json\encode;
 use function Psl\Str\Byte\contains;
 
 /**
+ * Creates JSON responses from any data.
+ *
+ * Provides convenience methods for responding with JSON content and sending HTTP {@see Problem} instances as JSON.
+ *
+ * MAY configure Content-Type by using {@see JsonResponseSettings}.
+ *
  * @api
  */
 final readonly class JsonResponseFactory

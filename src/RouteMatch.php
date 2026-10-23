@@ -10,6 +10,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use function Psl\Type\instance_of;
 
 /**
+ * A matched route and pattern result.
+ *
  * @api
  */
 final readonly class RouteMatch

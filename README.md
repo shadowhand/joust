@@ -22,27 +22,40 @@ composer require nyholm/psr7
 
 Early stage of development, everything is in flux!
 
-Create an application, add middleware and routes, and run it from your front controller:
+Create an application, add middleware and routes, and run it from your front controller with a PSR-7 request from your
+SAPI integration:
 
 ```php
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
+use Joust\Handler\NotFound;
+use Joust\Middleware\ParseJsonBody;
+use Joust\Response\JsonResponseFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
-$app = new App($container, new Psr17Factory()); // any PSR-11 container and PSR-17 factory
-$app->add(ProblemMiddleware::class);
+/** @var ContainerInterface $container */
+/** @var ServerRequestInterface $request */
+$factory = new Psr17Factory();
+$json = new JsonResponseFactory($factory, $factory);
+
+$app = new App($container, new NotFound($json));
+$app->add(new ProblemMiddleware($factory, $factory));
+$app->lazy(ParseJsonBody::class);
 $app->collectRoutes(__DIR__ . '/../src/Routes');
-$app->run();
+$app->run($request);
 ```
 
-Route handlers are PSR-15 request handlers with `#[AsRoute]` attributes. See the documentation below for details.
+The container provides each routed handler and every middleware added with `lazy()`. Route handlers are PSR-15 request
+handlers with `#[AsRoute]` attributes. See the documentation below for details.
 
 ## Documentation
 
 - [Routes](docs/routes.md): define routes, route lists, and access matched path parameters.
 - [Route discovery and caching](docs/cache.md): register handler routes with `AsRoute` and cache discovered routes.
-- [Applications and PSR-15 routing](docs/psr-15.md): build and run an application from middleware and routes, and
-  add middleware to individual route handlers.
+- [Applications and PSR-15 routing](docs/psr-15.md): build and run an application from middleware and routes, add
+  middleware to individual route handlers, and parse JSON request bodies.
 - [JSON responses](docs/responses.md): create JSON and problem responses and configure defaults.
 
 ## Demo

@@ -6,33 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-10-22
-
 ### Added
 
-- `App`, which runs middleware in the order it is added and then a fallback handler. Middleware can be added as an
-  instance or as a class name resolved lazily from the container. It takes a PSR-11 container and a PSR-17 factory that
-  creates responses, streams, server requests, URIs, and uploaded files.
-- `App::collectRoutes()` and `App::cacheRoutes()` to discover routes, optionally through a route cache, and add a
-  `Router` for them.
-- `Pipeline`, which runs a list of middleware before a request handler.
-- `NotFoundHandler`, which responds with a not found problem.
-- `App::run()`, which creates the request from globals with the `nyholm/psr7-server` `ServerRequestCreator`, using the
-  application's factory, and sends the response with an `Emitter`. Both can be replaced through the constructor.
-- `Emitter` interface and `SapiEmitter`, which sends a response with `http-interop/response-sender` and throws when
-  headers were already sent or output is already buffered.
-- `App` uses a `NotFoundHandler` built with its factory as the fallback unless another handler is given.
-- Route middleware: `RouteHandler` holds a list of middleware class names, with `withMiddleware()` to add more, and the
-  repeatable `#[Middleware]` attribute declares it on handler classes. `RouteCollector` reads the attribute, route
-  caches keep it, and `Router` runs a matched route's middleware in declared order before its handler.
+- `App` as a full application runner. It runs middleware in the order added, then runs a fallback handler.
+  It takes a PSR-11 container and (optionally) a request handler to use as the fallback. When no fallback is given,
+  it uses `Handler\NotFound` to generate a HTTP 404 page. `App` also provides convenience methods for adding routing,
+  from a cache or discovered at runtime.
 
 ### Changed
 
-- `Router` is middleware only. It no longer implements `RequestHandlerInterface` or takes a `JsonResponseFactory`; use
-  `NotFoundHandler` as the fallback instead.
-- Require `psr/http-message` and `psr/http-server-middleware` directly.
-- Require `nyholm/psr7-server` and `http-interop/response-sender`. Joust needs no PSR-7 implementation at runtime;
-  `nyholm/psr7` is suggested.
+- Refactored most functionality for better separation of concerns.
+- Added runtime checks for maximum type safety.
 
 ## [0.2.1] - 2026-10-16
 

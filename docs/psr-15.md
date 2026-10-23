@@ -8,99 +8,74 @@ application like any other middleware.
 
 ## Create an application
 
-`App` takes a [PSR-11][] container and a [PSR-17][] factory. Middleware and routes are added to it, and `run()` handles
-the current request and sends the response:
+`App` takes a [PSR-11][] container and an optional fallback handler. Middleware and routes are added to it, and
+`run()` handles a request and sends the response:
 
 [PSR-11]: https://www.php-fig.org/psr/psr-11/
-[PSR-17]: https://www.php-fig.org/psr/psr-17/
 
 ```php
 // public/index.php
-use Acme\Middleware\ParseJsonBody; // your own PSR-15 middleware
+use Joust\Middleware\ParseJsonBody;
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /** @var ContainerInterface $container */
-$factory = new Psr17Factory();
-
-$app = new App($container, $factory);
-$app->add(new ProblemMiddleware($factory, $factory));
-$app->add(ParseJsonBody::class);
+$app = new App($container);
+$app->lazy(ProblemMiddleware::class);
+$app->lazy(ParseJsonBody::class);
 $app->collectRoutes(__DIR__ . '/../src/Routes');
-$app->run();
+
+/** @var ServerRequestInterface $request */
+$app->run($request);
 ```
 
-The factory must create responses, streams, server requests, URIs, and uploaded files. Joust does not depend on any
-PSR-7 implementation; any package with a factory that implements all five PSR-17 interfaces works, such as
-`Nyholm\Psr7\Factory\Psr17Factory` from `nyholm/psr7` or `GuzzleHttp\Psr7\HttpFactory` from `guzzlehttp/psr7`.
-Implementations with a separate class per factory, such as Laminas Diactoros, need a small class that implements the
-five interfaces and delegates to each factory.
+The container must provide each routed handler and every middleware added with `lazy()`. It does not need to provide
+middleware added as instances, or the fallback handler when one is passed to the constructor.
 
-`add()` accepts a middleware instance or the class name of a middleware. A class name is resolved from the container
-when a request reaches it, so middleware that is never reached is never created. `add()`, `collectRoutes()`, and
-`cacheRoutes()` return the application, so calls can be chained.
+`add()` accepts a middleware instance. `lazy()` accepts the class name of a middleware and resolves it from the
+container when a request reaches it, so middleware that is never reached is never created. `add()`, `lazy()`,
+`collectRoutes()`, and `cachedRoutes()` return the application, so calls can be chained.
 
 The first middleware added is the outermost: it sees the request first and the response last. `App` does not catch
 exceptions; add an error middleware such as Errata's `ProblemMiddleware` first so that it wraps everything else.
 
 ## Fallback handler
 
-When no middleware responds, for example because no route matches, `App` calls its fallback handler. By default this
-is a `NotFoundHandler`, built with the application's factory, which responds with a JSON problem response with status
-404. Pass another request handler as the third argument to replace it:
+When no middleware responds, for example because no route matches, `App` calls its fallback handler. The default is
+`Joust\Handler\NotFound`, which responds with a JSON problem response with status 404. When no fallback is passed,
+`App` resolves it from the container under that class name.
+
+To avoid the container dependency, pass any request handler as the second argument:
 
 ```php
-use Joust\App;
-use Joust\NotFoundHandler;
-use Joust\Response\JsonResponseFactory;
-use Joust\Response\JsonResponseSettings;
-use Nyholm\Psr7\Factory\Psr17Factory;
-
-$factory = new Psr17Factory();
-$json = new JsonResponseFactory($factory, $factory, new JsonResponseSettings(pretty: true));
-
-$app = new App($container, $factory, new NotFoundHandler($json));
+$app = new App($container, new My404());
 ```
 
 ## Run and handle requests
 
-`run()` creates a PSR-7 server request from the PHP globals with the `ServerRequestCreator` from `nyholm/psr7-server`,
-using the application's factory. It passes the request through the application and sends the response with
-`Joust\Response\SapiEmitter`, which uses [http-interop/response-sender][response-sender]. Before sending,
-`SapiEmitter` throws a `RuntimeException` if headers were already sent, naming the file and line where output started,
-or if any output is waiting in an output buffer.
+`run()` accepts a [PSR-7][] server request, handles it, and sends the response with [http-interop/response-sender][].
+Joust does not create requests from globals; build the request in your front controller with the SAPI integration you
+already use, such as your framework's PSR-7 bridge or [nyholm/psr7-server][]:
 
-[response-sender]: https://github.com/http-interop/response-sender
-
-Pass your own `ServerRequestCreatorInterface` or `Joust\Response\Emitter` to the constructor to change either step:
+[PSR-7]: https://www.php-fig.org/psr/psr-7/
+[http-interop/response-sender]: https://github.com/http-interop/response-sender
+[nyholm/psr7-server]: https://github.com/nyholm/psr7-server
 
 ```php
-use Joust\Response\Emitter;
-use Joust\Response\SapiEmitter;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Log\LoggerInterface;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7Server\ServerRequestCreator;
 
-final class LoggingEmitter implements Emitter
-{
-    public function __construct(
-        private readonly Emitter $emitter,
-        private readonly LoggerInterface $logger,
-    ) {}
+$factory = new Psr17Factory();
+$creator = new ServerRequestCreator($factory, $factory, $factory, $factory);
 
-    public function emit(ResponseInterface $response): void
-    {
-        $this->logger->info('Sending response', ['status' => $response->getStatusCode()]);
-        $this->emitter->emit($response);
-    }
-}
-
-$app = new App($container, $factory, emitter: new LoggingEmitter(new SapiEmitter(), $logger));
+$app->run($creator->fromGlobals());
 ```
 
-`App` is itself a [PSR-15][] request handler. Call `handle()` with a server request to get a response without touching
-globals or sending output, for example in tests:
+Before sending, `run()` throws a `Psl\Exception\InvariantViolationException` when headers were already sent or when
+output is waiting in an output buffer. An empty output buffer, as the PHP built-in server keeps around router scripts,
+is allowed. Call `handle()` and emit the response yourself when you need to log, wrap, or otherwise control emission:
 
 ```php
 use Nyholm\Psr7\ServerRequest;
@@ -108,17 +83,21 @@ use Nyholm\Psr7\ServerRequest;
 $response = $app->handle(new ServerRequest('GET', '/todos'));
 ```
 
+`App` is itself a [PSR-15][] request handler, so `handle()` works without touching globals or sending output, for
+example in tests.
+
 ## Add routes
 
-`collectRoutes()` discovers routes from `#[AsRoute]` attributes on the handlers in a directory and adds a `Router` for
-them. `cacheRoutes()` does the same using a route cache file, which it writes when the file does not exist; see
+`collectRoutes()` discovers routes from `#[AsRoute]` attributes on the handlers in a directory and adds a `Router`
+for them. Passing a cache file as the second argument also writes the routes to that file, to generate a cache.
+`cachedRoutes()` adds a `Router` for the routes in an existing route cache file; see
 [Route discovery and caching](cache.md). The router is added at the point either method is called, like `add()`.
 
 A `Router` can also be created from any `RouteList` and added directly:
 
 ```php
+use Joust\Middleware\Router;
 use Joust\RouteList;
-use Joust\Router;
 
 /** @var RouteList $routes */
 $app->add(new Router($container, $routes));
@@ -135,14 +114,14 @@ fallback handler to respond.
 ## Route middleware
 
 Middleware can also be added to the routes of a single handler. Declare it on the handler class with the repeatable
-`#[Middleware]` attribute; the route collector reads it along with `#[AsRoute]`, and route caches keep it:
+`#[Middleware]` attribute; the route reader picks it up along with `#[AsRoute]`, and route caches keep it:
 
 ```php
-use Acme\Middleware\ParseJsonBody; // your own PSR-15 middleware
 use Acme\Middleware\RequireAuth;
 use Joust\Attribute\AsRoute;
 use Joust\Attribute\Middleware;
 use Joust\Method;
+use Joust\Middleware\ParseJsonBody;
 use Psr\Http\Server\RequestHandlerInterface;
 
 #[AsRoute(Method::Post, '/todos')]
@@ -160,7 +139,7 @@ returns a copy:
 ```php
 use Joust\RouteHandler;
 
-$handler = new RouteHandler(CreateTodo::class, RequireAuth::class);
+$handler = new RouteHandler(CreateTodo::class, [RequireAuth::class]);
 $handler = $handler->withMiddleware(ParseJsonBody::class);
 ```
 
@@ -169,14 +148,39 @@ runs after the application middleware added before the router, and after the `Ro
 can read the matched route. Each middleware is resolved from the container when a request reaches it; register it
 there along with the routed handlers.
 
+## Parse JSON request bodies
+
+`ParseJsonBody` decodes a JSON request body onto the request, so handlers read it with `$request->getParsedBody()`. It
+treats `application/json` and vendor-specific `application/*+json` media types as JSON, ignoring parameters such as
+`charset`. Add it to the application, or to the routes that accept JSON:
+
+```php
+use Joust\Attribute\AsRoute;
+use Joust\Attribute\Middleware;
+use Joust\Method;
+use Joust\Middleware\ParseJsonBody;
+use Psr\Http\Server\RequestHandlerInterface;
+
+#[AsRoute(Method::Post, '/todos')]
+#[Middleware(ParseJsonBody::class)]
+final readonly class CreateTodo implements RequestHandlerInterface
+{
+    // ...
+}
+```
+
+It uses `JsonResponseFactory` to answer invalid payloads, so register it in the container along with the routed
+handlers. Requests that are not JSON or have an empty body pass through unchanged. A body that cannot be decoded into
+a JSON object or array receives a `400 Bad Request` problem response instead of reaching the next handler.
+
 ## Without an application
 
 `Router` is standard PSR-15 middleware and `Pipeline` runs a list of middleware before a request handler, so both can
 be used in another middleware stack:
 
 ```php
-use Joust\NotFoundHandler;
-use Joust\Pipeline;
+use Joust\Handler\NotFound;
+use Joust\Handler\Pipeline;
 
-$response = new Pipeline([$router], new NotFoundHandler($json))->handle($request);
+$response = new Pipeline([$router], new NotFound($json))->handle($request);
 ```

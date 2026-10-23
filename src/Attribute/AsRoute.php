@@ -9,16 +9,19 @@ use Joust\Method;
 use League\Uri\UrlPattern;
 use League\Uri\UrlPatternBuilder;
 
+/**
+ * Mark a request handler as a route.
+ *
+ * MAY be used in combination with {@see Middleware}.
+ *
+ * @api
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final readonly class AsRoute
 {
     public Method $method;
     public UrlPattern $pattern;
 
-    /**
-     * @param Method|non-empty-string $method
-     * @param UrlPattern|string $pattern
-     */
     public function __construct(
         Method|string $method = Method::Get,
         UrlPattern|string $pattern = '/',
