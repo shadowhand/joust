@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Joust;
+namespace Joust\Middleware;
 
+use Joust\Handler\Pipeline;
+use Joust\RouteHandler;
+use Joust\RouteList;
+use Joust\RouteMatch;
+use Joust\RouteMatcher;
 use Override;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -14,19 +19,24 @@ use Psr\Http\Server\RequestHandlerInterface;
 use function Psl\Vec\map;
 
 /**
+ * Provides routing for requests.
+ *
+ * When a route matches the request URI, the route handler will be invoked with a {@see RouteMatch} attribute.
+ * When no route matches, will pass the request to the provided request handler.
+ *
  * @api
  */
 final readonly class Router implements MiddlewareInterface
 {
     public function __construct(
         private ContainerInterface $container,
-        private RouteList $routeList,
+        private RouteList $routes,
     ) {}
 
     #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $match = $this->routeList->match($request);
+        $match = new RouteMatcher($this->routes)->match($request);
 
         if (!$match) {
             return $handler->handle($request);
@@ -39,12 +49,15 @@ final readonly class Router implements MiddlewareInterface
 
     private function pipeline(RouteHandler $handler): RequestHandlerInterface
     {
-        $middleware = map(
-            $handler->middleware,
-            fn(string $name): MiddlewareInterface => new LazyMiddleware($this->container, $name),
-        );
+        return new Pipeline(map($handler->middleware, $this->lazy(...)), $this->resolve($handler));
+    }
 
-        return new Pipeline($middleware, $this->resolve($handler));
+    /**
+     * @param class-string<MiddlewareInterface> $name
+     */
+    private function lazy(string $name): Lazy
+    {
+        return new Lazy($this->container, $name);
     }
 
     private function resolve(RouteHandler $handler): RequestHandlerInterface

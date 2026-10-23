@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Joust;
+namespace Joust\Handler;
 
-use Errata\Http\Client\NotFound;
+use Errata\Http\Client\NotFound as Problem;
 use Joust\Response\JsonResponseFactory;
 use Override;
 use Psr\Http\Message\ResponseInterface;
@@ -12,11 +12,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Responds with a not found problem. Use it as the fallback handler of an `App`.
+ * Always responds with a 404 Not Found.
  *
  * @api
  */
-final readonly class NotFoundHandler implements RequestHandlerInterface
+final readonly class NotFound implements RequestHandlerInterface
 {
     public function __construct(
         private JsonResponseFactory $jsonResponseFactory,
@@ -25,6 +25,6 @@ final readonly class NotFoundHandler implements RequestHandlerInterface
     #[Override]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        return $this->jsonResponseFactory->problem(new NotFound());
+        return $this->jsonResponseFactory->problem(new Problem());
     }
 }

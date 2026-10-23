@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Joust\Tests;
+namespace Joust\Tests\Handler;
 
-use Joust\MiddlewareHandler;
-use Joust\Pipeline;
+use Joust\Handler\Pass;
+use Joust\Handler\Pipeline;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\Fixture\TraceMiddleware;
+use Joust\Tests\TestCase;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 #[CoversClass(Pipeline::class)]
-#[CoversClass(MiddlewareHandler::class)]
+#[CoversClass(Pass::class)]
 final class PipelineTest extends TestCase
 {
     public function testItRunsMiddlewareInOrderBeforeTheHandler(): void

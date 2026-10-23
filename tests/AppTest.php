@@ -5,20 +5,17 @@ declare(strict_types=1);
 namespace Joust\Tests;
 
 use Joust\App;
-use Joust\Cache\RouteCache;
-use Joust\Cache\RouteCollector;
-use Joust\NotFoundHandler;
+use Joust\Handler\NotFound;
+use Joust\Locator\RouteCache;
 use Joust\Response\JsonResponseFactory;
+use Joust\RouteCollection;
 use Joust\Tests\Fixture\Routes\GetUsers;
 use Joust\Tests\Fixture\TestContainer;
-use Joust\Tests\Fixture\TestEmitter;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\Fixture\TraceMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
-use Nyholm\Psr7Server\ServerRequestCreator;
 use Override;
-use PHPUnit\Framework\Attributes\BackupGlobals;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 use function Psl\Filesystem\delete_file;
@@ -28,7 +25,6 @@ use function Psl\Filesystem\is_file;
 final class AppTest extends TestCase
 {
     private const string DIRECTORY = __DIR__ . '/Fixture/Routes';
-    private const string EMPTY_DIRECTORY = __DIR__ . '/Fixture/Empty';
     private const string CACHE = '/tmp/joust-app-routes.cache';
 
     private Psr17Factory $factory;
@@ -56,48 +52,22 @@ final class AppTest extends TestCase
         $this->assertSame(404, $response->getStatusCode());
     }
 
-    public function testItDefaultsToANotFoundFallback(): void
+    public function testItDefaultsToTheContainerNotFoundHandler(): void
     {
-        $response = new App(new TestContainer(), $this->factory)->handle(new ServerRequest('GET', '/'));
+        $response = new App($this->container())->handle(new ServerRequest('GET', '/'));
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
     }
 
-    #[BackupGlobals(true)]
-    public function testItRunsTheRequestFromGlobals(): void
-    {
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/users';
-
-        $emitter = new TestEmitter();
-
-        $app = new App(new TestContainer([GetUsers::class => $this->handler]), $this->factory, emitter: $emitter);
-        $app->collectRoutes(self::DIRECTORY)->run();
-
-        $this->assertNotNull($this->handler->request);
-        $this->assertSame('/users', $this->handler->request->getUri()->getPath());
-        $this->assertSame(200, $emitter->response?->getStatusCode());
-    }
-
-    public function testItRunsTheRequestFromTheRequestCreator(): void
-    {
-        $emitter = new TestEmitter();
-        $creator = new ServerRequestCreator($this->factory, $this->factory, $this->factory, $this->factory);
-
-        new App(new TestContainer(), $this->factory, requestCreator: $creator, emitter: $emitter)->run();
-
-        $this->assertSame(404, $emitter->response?->getStatusCode());
-    }
-
     public function testItRunsMiddlewareInTheOrderAdded(): void
     {
-        $container = new TestContainer([TraceMiddleware::class => new TraceMiddleware('lazy')]);
+        $container = $this->container([TraceMiddleware::class => new TraceMiddleware('lazy')]);
 
         $response = $this
             ->createApp($container)
             ->add(new TraceMiddleware('first'))
-            ->add(TraceMiddleware::class)
+            ->lazy(TraceMiddleware::class)
             ->handle(new ServerRequest('GET', '/'));
 
         $this->assertSame(['lazy', 'first'], $response->getHeader('X-Trace'));
@@ -105,9 +75,7 @@ final class AppTest extends TestCase
 
     public function testItCollectsRoutes(): void
     {
-        $app = $this->createApp()->collectRoutes(self::DIRECTORY);
-
-        $response = $app->handle(new ServerRequest('GET', '/users'));
+        $response = $this->createApp()->collectRoutes(self::DIRECTORY)->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotNull($this->handler->request);
@@ -125,37 +93,44 @@ final class AppTest extends TestCase
         $this->assertSame(['before'], $response->getHeader('X-Trace'));
     }
 
-    public function testItWritesTheRouteCacheWhenMissing(): void
+    public function testItWritesTheRouteCacheWhenCollecting(): void
     {
-        $app = $this->createApp()->cacheRoutes(self::DIRECTORY, self::CACHE);
+        $app = $this->createApp()->collectRoutes(self::DIRECTORY, self::CACHE);
 
         $this->assertTrue(is_file(self::CACHE));
 
         $response = $app->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotNull($this->handler->request);
     }
 
     public function testItReadsAnExistingRouteCache(): void
     {
-        new RouteCache(new RouteCollector())->write(self::EMPTY_DIRECTORY, self::CACHE);
+        new RouteCache()->write(new RouteCollection(), self::CACHE);
 
-        $app = $this->createApp()->cacheRoutes(self::DIRECTORY, self::CACHE);
-
-        $response = $app->handle(new ServerRequest('GET', '/users'));
+        $response = $this->createApp()->cachedRoutes(self::CACHE)->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertNull($this->handler->request);
     }
 
+    /**
+     * @param array<string, mixed> $entries
+     */
+    private function container(array $entries = []): TestContainer
+    {
+        return new TestContainer([
+            NotFound::class => new NotFound(new JsonResponseFactory($this->factory, $this->factory)),
+            GetUsers::class => $this->handler,
+            ...$entries,
+        ]);
+    }
+
     private function createApp(?TestContainer $container = null): App
     {
-        $container ??= new TestContainer([GetUsers::class => $this->handler]);
+        $container ??= $this->container();
 
-        return new App(
-            $container,
-            $this->factory,
-            new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)),
-        );
+        return new App($container, new NotFound(new JsonResponseFactory($this->factory, $this->factory)));
     }
 }

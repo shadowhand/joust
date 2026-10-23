@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Joust;
+namespace Joust\Middleware;
 
 use Override;
 use Psr\Container\ContainerInterface;
@@ -12,20 +12,20 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 use function Psl\Type\class_string;
-use function Psl\Type\instance_of;
 
 /**
- * Resolves middleware from a container when a request reaches it.
+ * Defers a middleware from being resolved until called.
  *
- * @internal
+ * @api
  */
-final readonly class LazyMiddleware implements MiddlewareInterface
+final readonly class Lazy implements MiddlewareInterface
 {
     /**
-     * @phpstan-assert class-string<MiddlewareInterface> $name
+     * @assert class-string<MiddlewareInterface> $name
      */
     public function __construct(
         private ContainerInterface $container,
+        /** @var class-string<MiddlewareInterface> */
         private string $name,
     ) {
         class_string(MiddlewareInterface::class)->assert($this->name);
@@ -34,8 +34,12 @@ final readonly class LazyMiddleware implements MiddlewareInterface
     #[Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $middleware = instance_of(MiddlewareInterface::class)->assert($this->container->get($this->name));
+        return $this->resolve()->process($request, $handler);
+    }
 
-        return $middleware->process($request, $handler);
+    private function resolve(): MiddlewareInterface
+    {
+        // @mago-expect analysis:mixed-return-statement
+        return $this->container->get($this->name);
     }
 }

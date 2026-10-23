@@ -10,7 +10,11 @@ use Psr\Http\Server\MiddlewareInterface;
 use function Psl\Type\class_string;
 
 /**
- * Adds middleware to the routes of a request handler. Middleware runs in the order it is declared.
+ * Apply a middleware to a request handler.
+ *
+ * The middleware will be invoked before the request handler.
+ *
+ * SHOULD be used in combination with {@see AsRoute}.
  *
  * @api
  */
@@ -18,9 +22,10 @@ use function Psl\Type\class_string;
 final readonly class Middleware
 {
     /**
-     * @phpstan-assert class-string<MiddlewareInterface> $name
+     * @assert class-string<MiddlewareInterface> $name
      */
     public function __construct(
+        /** @var class-string<MiddlewareInterface> */
         public string $name,
     ) {
         class_string(MiddlewareInterface::class)->assert($this->name);

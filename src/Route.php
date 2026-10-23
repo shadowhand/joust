@@ -7,6 +7,8 @@ namespace Joust;
 use League\Uri\UrlPattern;
 
 /**
+ * A request handler route.
+ *
  * @api
  */
 final readonly class Route

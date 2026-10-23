@@ -35,6 +35,9 @@ abstract class TestCase extends PHPUnitTestCase
         return new Route($method, $pattern, new RouteHandler($handler));
     }
 
+    /**
+     * @param class-string<RequestHandlerInterface>|null $handler
+     */
     protected function createRouteMatch(?string $handler = null, ?Result $result = null): RouteMatch
     {
         if (!$handler) {

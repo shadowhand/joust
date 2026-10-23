@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Joust;
+namespace Joust\Handler;
 
 use Override;
 use Psr\Http\Message\ResponseInterface;
@@ -11,12 +11,13 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Adapts a middleware and the next handler into a request handler, so a list of
- * middleware can be folded into a single pipeline.
+ * Processes the request with an inner middleware and request handler.
+ *
+ * Used by {@see Pipeline} to stack middleware.
  *
  * @internal
  */
-final readonly class MiddlewareHandler implements RequestHandlerInterface
+final readonly class Pass implements RequestHandlerInterface
 {
     public function __construct(
         private MiddlewareInterface $middleware,

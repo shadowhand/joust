@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Psl\Type\Exception\AssertException;
 
 #[CoversClass(RouteMatch::class)]
-final class RouteResultTest extends TestCase
+final class RouteMatchTest extends TestCase
 {
     public function testInjectAddsResultAsRequestAttribute(): void
     {
