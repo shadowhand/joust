@@ -15,8 +15,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/users/:id')]
-#[AsRoute(Method::Delete, '/users/:id')]
+#[AsRoute(Method::Get, path: '/users/:id')]
+#[AsRoute(Method::Delete, path: '/users/:id')]
 #[Middleware(TraceMiddleware::class)]
 #[Middleware(ProblemMiddleware::class)]
 final class UserActions implements RequestHandlerInterface

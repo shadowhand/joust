@@ -41,7 +41,7 @@ flow. A `RouteHandler` also holds a list of middleware class names to run before
 [Route middleware](psr-15.md#route-middleware).
 
 `RouteList` is an interface extending `IteratorAggregate`, so any iterable source of routes can implement it.
-`RouteCollection` and the route locators in [Route discovery and caching](cache.md) are the built-in implementations.
+`RouteCollection` and the route finders in [Route discovery and caching](cache.md) are the built-in implementations.
 
 ## Matching requests
 

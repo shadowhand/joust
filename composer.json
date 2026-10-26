@@ -11,6 +11,8 @@
     ],
     "require": {
         "php": "^8.4",
+        "composer-runtime-api": "^2.0",
+        "composer/class-map-generator": "^1.8",
         "errata/errata": "^0.2.0",
         "http-interop/response-sender": "^1.1",
         "league/uri": "^7.9.0",
@@ -23,8 +25,7 @@
         "psr/http-factory": "^1.1",
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
-        "psr/http-server-middleware": "^1.0",
-        "wyrihaximus/list-classes-in-directory": "^1.7"
+        "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
         "captainhook/captainhook": "^5.29",

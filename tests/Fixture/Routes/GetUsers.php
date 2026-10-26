@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/users')]
+#[AsRoute(Method::Get, path: '/users')]
 final class GetUsers implements RequestHandlerInterface
 {
     #[Override]

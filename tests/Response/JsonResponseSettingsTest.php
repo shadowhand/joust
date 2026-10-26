@@ -7,6 +7,7 @@ namespace Joust\Tests\Response;
 use Joust\Response\JsonResponseSettings;
 use Joust\Tests\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
+use Psl\Type\Exception\AssertException;
 
 use const JSON_INVALID_UTF8_IGNORE;
 
@@ -36,5 +37,19 @@ final class JsonResponseSettingsTest extends TestCase
         $this->assertSame('iso-8859-1', $settings->charset);
         $this->assertTrue($settings->pretty);
         $this->assertSame(JSON_INVALID_UTF8_IGNORE, $settings->flags);
+    }
+
+    public function testRejectsAnEmptyContentType(): void
+    {
+        $this->expectException(AssertException::class);
+
+        new JsonResponseSettings(contentType: '');
+    }
+
+    public function testRejectsNegativeFlags(): void
+    {
+        $this->expectException(AssertException::class);
+
+        new JsonResponseSettings(flags: -1);
     }
 }

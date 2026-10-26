@@ -7,9 +7,10 @@ namespace Joust\Tests\Attribute;
 use Joust\Attribute\AsRoute;
 use Joust\Method;
 use Joust\Tests\TestCase;
-use League\Uri\UrlPattern;
 use PHPUnit\Framework\Attributes\CoversClass;
 use ValueError;
+
+use function Psl\Str\Byte\reverse;
 
 #[CoversClass(AsRoute::class)]
 final class AsRouteTest extends TestCase
@@ -19,15 +20,41 @@ final class AsRouteTest extends TestCase
         $route = new AsRoute();
 
         $this->assertSame(Method::Get, $route->method);
-        $this->assertSame('/', $route->pattern->path);
+        $this->assertNull($route->baseUrl);
+        $this->assertNull($route->scheme);
+        $this->assertNull($route->username);
+        $this->assertNull($route->password);
+        $this->assertNull($route->host);
+        $this->assertNull($route->path);
+        $this->assertNull($route->query);
+        $this->assertNull($route->fragment);
     }
 
-    public function testNormalizesMethodAndTemplate(): void
+    public function testExposesUrlComponents(): void
     {
-        $route = new AsRoute(Method::Post, '/posts');
+        $password = reverse('terces');
+
+        $route = new AsRoute(
+            Method::Post,
+            baseUrl: 'https://api.example.com',
+            scheme: 'https',
+            username: 'user',
+            password: $password,
+            host: 'example.com',
+            path: '/posts',
+            query: 'page=:page',
+            fragment: 'results',
+        );
 
         $this->assertSame(Method::Post, $route->method);
-        $this->assertSame('/posts', $route->pattern->path);
+        $this->assertSame('https://api.example.com', $route->baseUrl);
+        $this->assertSame('https', $route->scheme);
+        $this->assertSame('user', $route->username);
+        $this->assertSame($password, $route->password);
+        $this->assertSame('example.com', $route->host);
+        $this->assertSame('/posts', $route->path);
+        $this->assertSame('page=:page', $route->query);
+        $this->assertSame('results', $route->fragment);
     }
 
     public function testNormalizesStringMethod(): void
@@ -35,15 +62,6 @@ final class AsRouteTest extends TestCase
         $route = new AsRoute('PATCH');
 
         $this->assertSame(Method::Patch, $route->method);
-    }
-
-    public function testAcceptsUriTemplateInstance(): void
-    {
-        $pattern = UrlPattern::from('/users/:id', baseUrl: 'https://example.com');
-
-        $route = new AsRoute(Method::Get, $pattern);
-
-        $this->assertSame($pattern, $route->pattern);
     }
 
     public function testRejectsUnknownMethod(): void

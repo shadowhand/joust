@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 
-#[AsRoute(Method::Get, '/crash')]
+#[AsRoute(Method::Get, path: '/crash')]
 final readonly class Crash implements RequestHandlerInterface
 {
     #[Override]

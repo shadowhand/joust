@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Joust\Tests;
 
 use Joust\App;
+use Joust\Cache\RouteCache;
+use Joust\Cache\RouteCacheSettings;
+use Joust\Finder\RouteFinder;
+use Joust\Finder\RouteFinderSettings;
 use Joust\Handler\NotFoundHandler;
-use Joust\Locator\RouteCache;
 use Joust\Response\JsonResponseFactory;
 use Joust\RouteCollection;
 use Joust\Tests\Fixture\Routes\GetUsers;
@@ -60,6 +63,18 @@ final class AppTest extends TestCase
         $this->assertSame('{"title":"Not Found","status":404}', (string) $response->getBody());
     }
 
+    public function testItSetsTheFallbackHandler(): void
+    {
+        $app = new App($this->container());
+
+        $this->assertSame($app, $app->setFallback($this->handler));
+
+        $response = $app->handle(new ServerRequest('GET', '/'));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotNull($this->handler->request);
+    }
+
     public function testItRunsMiddlewareInTheOrderAdded(): void
     {
         $container = $this->container([TraceMiddleware::class => new TraceMiddleware('lazy')]);
@@ -73,43 +88,50 @@ final class AppTest extends TestCase
         $this->assertSame(['lazy', 'first'], $response->getHeader('X-Trace'));
     }
 
-    public function testItCollectsRoutes(): void
+    public function testItUsesTheContainerRouteFinder(): void
     {
-        $response = $this->createApp()->collectRoutes(self::DIRECTORY)->handle(new ServerRequest('GET', '/users'));
+        $response = $this
+            ->createApp($this->container([RouteFinder::class => $this->routeFinder()]))
+            ->liveRouter()
+            ->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotNull($this->handler->request);
     }
 
-    public function testItAddsCollectedRoutesAtThePointCalled(): void
+    public function testItAddsTheLiveRouterAtThePointCalled(): void
     {
         $response = $this
-            ->createApp()
+            ->createApp($this->container([RouteFinder::class => $this->routeFinder()]))
             ->add(new TraceMiddleware('before'))
-            ->collectRoutes(self::DIRECTORY)
+            ->liveRouter()
             ->add(new TraceMiddleware('after'))
             ->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(['before'], $response->getHeader('X-Trace'));
     }
 
-    public function testItWritesTheRouteCacheWhenCollecting(): void
+    public function testItUsesTheCachedRoutesFromTheContainer(): void
     {
-        $app = $this->createApp()->collectRoutes(self::DIRECTORY, self::CACHE);
+        $this->routeCache()->write($this->routeFinder());
 
-        $this->assertTrue(is_file(self::CACHE));
-
-        $response = $app->handle(new ServerRequest('GET', '/users'));
+        $response = $this
+            ->createApp($this->container([RouteCache::class => $this->routeCache()]))
+            ->cachedRouter()
+            ->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotNull($this->handler->request);
     }
 
-    public function testItReadsAnExistingRouteCache(): void
+    public function testItFallsBackForAnEmptyRouteCache(): void
     {
-        new RouteCache()->write(new RouteCollection(), self::CACHE);
+        $this->routeCache()->write(new RouteCollection());
 
-        $response = $this->createApp()->cachedRoutes(self::CACHE)->handle(new ServerRequest('GET', '/users'));
+        $response = $this
+            ->createApp($this->container([RouteCache::class => $this->routeCache()]))
+            ->cachedRouter()
+            ->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertNull($this->handler->request);
@@ -127,10 +149,18 @@ final class AppTest extends TestCase
         ]);
     }
 
+    private function routeFinder(): RouteFinder
+    {
+        return new RouteFinder(new RouteFinderSettings(self::DIRECTORY));
+    }
+
+    private function routeCache(): RouteCache
+    {
+        return new RouteCache(new RouteCacheSettings(self::CACHE));
+    }
+
     private function createApp(?TestContainer $container = null): App
     {
-        $container ??= $this->container();
-
-        return new App($container, new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)));
+        return new App($container ?? $this->container());
     }
 }

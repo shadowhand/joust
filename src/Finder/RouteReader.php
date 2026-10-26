@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Joust\Locator;
+namespace Joust\Finder;
 
 use Joust\Attribute\AsRoute;
 use Joust\Attribute\Middleware;
 use Joust\Route;
 use Joust\RouteHandler;
 use Joust\RouteList;
+use League\Uri\UrlPattern;
+use League\Uri\UrlPatternBuilder;
 use Override;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
@@ -32,6 +34,8 @@ final readonly class RouteReader implements RouteList
     public function __construct(
         /** @var class-string<RequestHandlerInterface> */
         private string $class,
+        /** @var non-empty-string|null */
+        private ?string $baseUrl = null,
     ) {
         class_string(RequestHandlerInterface::class)->assert($class);
     }
@@ -48,8 +52,23 @@ final readonly class RouteReader implements RouteList
 
         foreach ($reflection->getAttributes(AsRoute::class) as $attr) {
             $route = $attr->newInstance();
+            $pattern = $this->buildPattern($route);
 
-            yield new Route($route->method, $route->pattern, $handler);
+            yield new Route($route->method, $pattern, $handler);
         }
+    }
+
+    private function buildPattern(AsRoute $route): UrlPattern
+    {
+        return new UrlPatternBuilder(
+            baseUrl: $route->baseUrl ?? $this->baseUrl,
+            scheme: $route->scheme,
+            username: $route->username,
+            password: $route->password,
+            host: $route->host,
+            path: $route->path,
+            query: $route->query,
+            fragment: $route->fragment,
+        )->build();
     }
 }

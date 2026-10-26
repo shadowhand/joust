@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Joust\Response;
 
+use function Psl\Type\non_empty_string;
+use function Psl\Type\nullable;
+use function Psl\Type\uint;
+
 /**
- * Provides options for JSON responses.
+ * Provides settings for JSON responses.
  *
  * SHOULD be used with {@see JsonResponseFactory}.
  *
@@ -13,13 +17,41 @@ namespace Joust\Response;
  */
 final readonly class JsonResponseSettings
 {
+    /**
+     * JSON content type.
+     *
+     * @var non-empty-string
+     */
+    public string $contentType;
+
+    /**
+     * Content type character set.
+     *
+     * @var non-empty-string
+     */
+    public string $charset;
+
+    /**
+     * JSON encoding flags.
+     *
+     * @var int<0,max>
+     */
+    public int $flags;
+
+    /**
+     * Enable pretty JSON responses?
+     */
+    public bool $pretty;
+
     public function __construct(
-        /** @var non-empty-string */
-        public string $contentType = 'application/json',
-        /** @var non-empty-string */
-        public string $charset = 'utf-8',
-        public bool $pretty = false,
-        /** @var int<0,max> */
-        public int $flags = 0,
-    ) {}
+        ?string $contentType = null,
+        ?string $charset = null,
+        ?bool $pretty = null,
+        ?int $flags = null,
+    ) {
+        $this->contentType = nullable(non_empty_string())->assert($contentType) ?? 'application/json';
+        $this->charset = nullable(non_empty_string())->assert($charset) ?? 'utf-8';
+        $this->flags = nullable(uint())->assert($flags) ?? 0;
+        $this->pretty = $pretty ?? false;
+    }
 }

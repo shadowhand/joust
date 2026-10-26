@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/todos/:id')]
+#[AsRoute(Method::Get, path: '/todos/:id')]
 final readonly class GetTodo implements RequestHandlerInterface
 {
     public function __construct(

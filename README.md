@@ -28,9 +28,7 @@ SAPI integration:
 ```php
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
-use Joust\Handler\NotFound;
-use Joust\Middleware\ParseJsonBody;
-use Joust\Response\JsonResponseFactory;
+use Joust\Middleware\ParseJsonMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -38,17 +36,19 @@ use Psr\Http\Message\ServerRequestInterface;
 /** @var ContainerInterface $container */
 /** @var ServerRequestInterface $request */
 $factory = new Psr17Factory();
-$json = new JsonResponseFactory($factory, $factory);
 
-$app = new App($container, new NotFound($json));
+$app = new App($container);
 $app->add(new ProblemMiddleware($factory, $factory));
-$app->lazy(ParseJsonBody::class);
-$app->collectRoutes(__DIR__ . '/../src/Routes');
+$app->lazy(ParseJsonMiddleware::class);
+$app->liveRouter();
 $app->run($request);
 ```
 
-The container provides each routed handler and every middleware added with `lazy()`. Route handlers are PSR-15 request
-handlers with `#[AsRoute]` attributes. See the documentation below for details.
+Register a `Joust\Finder\RouteFinder` in the container under `RouteFinder::class`, configured with a
+`Joust\Finder\RouteFinderSettings` pointing at your route directory; `liveRouter()` resolves it. The container also
+provides each routed handler, every middleware added with `lazy()`, and the default `Joust\Handler\NotFoundHandler`
+unless you replace it with `setFallback()`. Route handlers are PSR-15 request handlers with `#[AsRoute]` attributes.
+See the documentation below for details.
 
 ## Documentation
 
