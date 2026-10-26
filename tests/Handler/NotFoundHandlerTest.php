@@ -4,21 +4,22 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Handler;
 
-use Joust\Handler\NotFound;
+use Joust\Handler\NotFoundHandler;
 use Joust\Response\JsonResponseFactory;
 use Joust\Tests\TestCase;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 
-#[CoversClass(NotFound::class)]
-final class NotFoundTest extends TestCase
+#[CoversClass(NotFoundHandler::class)]
+final class NotFoundHandlerTest extends TestCase
 {
     public function testItRespondsWithNotFoundProblem(): void
     {
         $factory = new Psr17Factory();
+        $jsonFactory = new JsonResponseFactory($factory, $factory);
 
-        $response = new NotFound(new JsonResponseFactory($factory, $factory))->handle(new ServerRequest('GET', '/'));
+        $response = new NotFoundHandler($jsonFactory)->handle(new ServerRequest('GET', '/'));
 
         $this->assertSame(404, $response->getStatusCode());
         $this->assertSame('application/problem+json; charset=utf-8', $response->getHeaderLine('Content-Type'));

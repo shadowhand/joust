@@ -24,15 +24,15 @@ use function Psl\Type\mixed_vec;
 use function Psl\Type\union;
 
 /**
- * Decodes a request body as JSON.
+ * Parses a request body as JSON.
  *
  * Determines if the request has a content type of `application/json`, or similar vendor type.
- * If so, decodes the body and applies it to the request as parsed.
- * If not, passes the request through unmodified.
+ * If so, decodes the body and applies it to the request as parsed body.
+ * If not, passes the request through without modification.
  *
  * @api
  */
-final readonly class ParseJsonBody implements MiddlewareInterface
+final readonly class ParseJsonMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private JsonResponseFactory $json,

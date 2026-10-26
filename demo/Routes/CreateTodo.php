@@ -9,7 +9,7 @@ use Joust\Attribute\AsRoute;
 use Joust\Attribute\Middleware;
 use Joust\Demo\TodoStore;
 use Joust\Method;
-use Joust\Middleware\ParseJsonBody;
+use Joust\Middleware\ParseJsonMiddleware;
 use Joust\Response\JsonResponseFactory;
 use Override;
 use Psr\Http\Message\ResponseInterface;
@@ -21,7 +21,7 @@ use function is_string;
 use function Psl\Str\trim;
 
 #[AsRoute(Method::Post, '/todos')]
-#[Middleware(ParseJsonBody::class)]
+#[Middleware(ParseJsonMiddleware::class)]
 final readonly class CreateTodo implements RequestHandlerInterface
 {
     public function __construct(

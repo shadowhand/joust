@@ -38,7 +38,7 @@ final class App implements RequestHandlerInterface
         private readonly ContainerInterface $container,
         ?RequestHandlerInterface $fallback = null,
     ) {
-        $this->fallback = $fallback ?? $this->container->get(Handler\NotFound::class);
+        $this->fallback = $fallback ?? $this->container->get(Handler\NotFoundHandler::class);
     }
 
     public function add(MiddlewareInterface $middleware): static
@@ -53,12 +53,12 @@ final class App implements RequestHandlerInterface
      */
     public function lazy(string $middleware): static
     {
-        return $this->add(new Middleware\Lazy($this->container, $middleware));
+        return $this->add(new Middleware\LazyMiddleware($this->container, $middleware));
     }
 
     /**
      * @param non-empty-string $directory
-     * @param non-empty-string $file
+     * @param non-empty-string|null $file
      */
     public function collectRoutes(string $directory, ?string $file = null): static
     {
@@ -68,7 +68,7 @@ final class App implements RequestHandlerInterface
             $routes = new Locator\RouteCache()->write($routes, $file);
         }
 
-        return $this->add(new Middleware\Router($this->container, $routes));
+        return $this->add(new Middleware\RouterMiddleware($this->container, $routes));
     }
 
     /**
@@ -78,13 +78,13 @@ final class App implements RequestHandlerInterface
     {
         $routes = new Locator\RouteCache()->read($file);
 
-        return $this->add(new Middleware\Router($this->container, $routes));
+        return $this->add(new Middleware\RouterMiddleware($this->container, $routes));
     }
 
     #[Override]
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        return new Handler\Pipeline($this->middleware, $this->fallback)->handle($request);
+        return new Handler\PipelineHandler($this->middleware, $this->fallback)->handle($request);
     }
 
     public function run(ServerRequestInterface $request): void

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Joust\Tests;
 
 use Joust\App;
-use Joust\Handler\NotFound;
+use Joust\Handler\NotFoundHandler;
 use Joust\Locator\RouteCache;
 use Joust\Response\JsonResponseFactory;
 use Joust\RouteCollection;
@@ -121,7 +121,7 @@ final class AppTest extends TestCase
     private function container(array $entries = []): TestContainer
     {
         return new TestContainer([
-            NotFound::class => new NotFound(new JsonResponseFactory($this->factory, $this->factory)),
+            NotFoundHandler::class => new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)),
             GetUsers::class => $this->handler,
             ...$entries,
         ]);
@@ -131,6 +131,6 @@ final class AppTest extends TestCase
     {
         $container ??= $this->container();
 
-        return new App($container, new NotFound(new JsonResponseFactory($this->factory, $this->factory)));
+        return new App($container, new NotFoundHandler(new JsonResponseFactory($this->factory, $this->factory)));
     }
 }

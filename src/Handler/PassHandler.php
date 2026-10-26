@@ -17,7 +17,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * @internal
  */
-final readonly class Pass implements RequestHandlerInterface
+final readonly class PassHandler implements RequestHandlerInterface
 {
     public function __construct(
         private MiddlewareInterface $middleware,

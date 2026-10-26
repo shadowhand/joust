@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Joust\Tests\Middleware;
 
 use Joust\Method;
-use Joust\Middleware\Router;
+use Joust\Middleware\RouterMiddleware;
 use Joust\Route;
 use Joust\RouteCollection;
 use Joust\RouteMatch;
@@ -18,8 +18,8 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 
-#[CoversClass(Router::class)]
-final class RouterTest extends TestCase
+#[CoversClass(RouterMiddleware::class)]
+final class RouterMiddlewareTest extends TestCase
 {
     public function testShouldDispatchMatchedRoute(): void
     {
@@ -27,7 +27,7 @@ final class RouterTest extends TestCase
         $handler = new TestHandler($factory);
         $container = new TestContainer([TestHandler::class => $handler]);
 
-        $router = new Router($container, new RouteCollection($this->createRoute(Method::Get, '/users/:id')));
+        $router = new RouterMiddleware($container, new RouteCollection($this->createRoute(Method::Get, '/users/:id')));
 
         $next = new TestHandler($factory);
 
@@ -46,7 +46,7 @@ final class RouterTest extends TestCase
     {
         $factory = new Psr17Factory();
 
-        $router = new Router(new TestContainer(), new RouteCollection());
+        $router = new RouterMiddleware(new TestContainer(), new RouteCollection());
 
         $next = new TestHandler($factory);
 
@@ -73,7 +73,7 @@ final class RouterTest extends TestCase
             $route->handler->withMiddleware(TraceMiddleware::class, OtherTraceMiddleware::class),
         );
 
-        $router = new Router($container, new RouteCollection($route));
+        $router = new RouterMiddleware($container, new RouteCollection($route));
 
         $response = $router->process(new ServerRequest('GET', '/users/42'), new TestHandler($factory));
 
