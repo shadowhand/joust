@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Joust\Tests\Locator;
+namespace Joust\Tests\Finder;
 
 use Errata\Middleware\ProblemMiddleware;
-use Joust\Locator\RouteReader;
+use Joust\Finder\RouteReader;
 use Joust\Method;
 use Joust\Route;
+use Joust\Tests\Fixture\BaseUrlHandler;
 use Joust\Tests\Fixture\Routes\GetUsers;
 use Joust\Tests\Fixture\Routes\UserActions;
 use Joust\Tests\Fixture\TraceMiddleware;
@@ -50,6 +51,34 @@ final class RouteReaderTest extends TestCase
             $this->assertSame('/users/:id', $route->pattern->path);
             $this->assertSame(UserActions::class, $route->handler->name);
             $this->assertSame([TraceMiddleware::class, ProblemMiddleware::class], $route->handler->middleware);
+        }
+    }
+
+    public function testItAppliesTheBaseUrlToEveryRoute(): void
+    {
+        $routes = values(new RouteReader(GetUsers::class, 'https://example.com'));
+
+        $this->assertCount(1, $routes);
+
+        foreach ($routes as $route) {
+            $pattern = $route->pattern;
+
+            $this->assertNotNull($pattern->extract('https://example.com/users'));
+            $this->assertNull($pattern->extract('https://other.example.com/users'));
+        }
+    }
+
+    public function testItPrefersTheBaseUrlFromTheAttribute(): void
+    {
+        $routes = values(new RouteReader(BaseUrlHandler::class, 'https://ignored.example.com'));
+
+        $this->assertCount(1, $routes);
+
+        foreach ($routes as $route) {
+            $pattern = $route->pattern;
+
+            $this->assertNotNull($pattern->extract('https://api.example.com/status'));
+            $this->assertNull($pattern->extract('https://ignored.example.com/status'));
         }
     }
 }

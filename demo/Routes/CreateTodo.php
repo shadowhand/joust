@@ -20,7 +20,7 @@ use function is_array;
 use function is_string;
 use function Psl\Str\trim;
 
-#[AsRoute(Method::Post, '/todos')]
+#[AsRoute(Method::Post, path: '/todos')]
 #[Middleware(ParseJsonMiddleware::class)]
 final readonly class CreateTodo implements RequestHandlerInterface
 {

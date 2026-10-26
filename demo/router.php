@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Run it with PHP's built-in server:
  *
- *     php -S localhost:8080 demo/router.php
+ *     php -S localhost:8081 demo/router.php
  */
 
 use Joust\Demo\TodoApp;

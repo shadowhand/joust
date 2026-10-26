@@ -15,7 +15,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Patch, '/todos/:id/complete')]
+#[AsRoute(Method::Patch, path: '/todos/:id/complete')]
 final readonly class CompleteTodo implements RequestHandlerInterface
 {
     public function __construct(

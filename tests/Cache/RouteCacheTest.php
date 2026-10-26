@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Joust\Tests\Locator;
+namespace Joust\Tests\Cache;
 
 use Errata\Middleware\ProblemMiddleware;
-use Joust\Locator\RouteCache;
-use Joust\Locator\RouteLocator;
+use Joust\Cache\RouteCache;
+use Joust\Cache\RouteCacheSettings;
+use Joust\Finder\RouteFinder;
+use Joust\Finder\RouteFinderSettings;
 use Joust\Route;
 use Joust\RouteCollection;
 use Joust\Tests\Fixture\Routes\GetUsers;
@@ -38,7 +40,7 @@ final class RouteCacheTest extends TestCase
 
     public function testItWritesTheRoutesToTheCache(): void
     {
-        $list = new RouteCache()->write(new RouteLocator(self::DIRECTORY), self::CACHE);
+        $list = $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
 
         $this->assertTrue(is_file(self::CACHE));
 
@@ -49,9 +51,9 @@ final class RouteCacheTest extends TestCase
 
     public function testItReadsTheRoutesFromTheCache(): void
     {
-        new RouteCache()->write(new RouteLocator(self::DIRECTORY), self::CACHE);
+        $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
 
-        $list = new RouteCache()->read(self::CACHE);
+        $list = $this->createCache()->read();
 
         $handlers = sort(map($list, static fn(Route $route): string => $route->handler->name));
 
@@ -60,11 +62,11 @@ final class RouteCacheTest extends TestCase
 
     public function testItCarriesHandlerMiddlewareThroughTheCache(): void
     {
-        new RouteCache()->write(new RouteLocator(self::DIRECTORY), self::CACHE);
+        $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
 
         $middleware = [];
 
-        foreach (new RouteCache()->read(self::CACHE) as $route) {
+        foreach ($this->createCache()->read() as $route) {
             $middleware[$route->handler->name] = $route->handler->middleware;
         }
 
@@ -74,8 +76,13 @@ final class RouteCacheTest extends TestCase
 
     public function testItCachesAnEmptyRouteList(): void
     {
-        new RouteCache()->write(new RouteCollection(), self::CACHE);
+        $this->createCache()->write(new RouteCollection());
 
-        $this->assertSame([], values(new RouteCache()->read(self::CACHE)));
+        $this->assertSame([], values($this->createCache()->read()));
+    }
+
+    private function createCache(): RouteCache
+    {
+        return new RouteCache(new RouteCacheSettings(self::CACHE));
     }
 }

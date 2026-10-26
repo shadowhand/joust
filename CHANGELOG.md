@@ -6,10 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `Finder\RouteFinderSettings` and `Cache\RouteCacheSettings` to configure route discovery and caching.
+- `App::setFallback()` to replace the fallback request handler.
+
 ### Changed
 
 - Added `Handler` suffix to request handlers.
 - Added `Middleware` suffix to request middleware.
+- `AsRoute` accepts URL pattern components (`baseUrl`, `scheme`, `username`, `password`, `host`, `path`, `query`, and
+  `fragment`) instead of a `UrlPattern` instance or a path string.
+- `RouteReader` builds URL patterns from route attributes and accepts an optional base URL. A route's own `baseUrl`
+  takes precedence over the base URL configured for the reader.
+- `RouteCache` reads and writes the cache file configured by `RouteCacheSettings` instead of taking a file path on
+  each call.
+- `App::liveRouter()` and `App::cachedRouter()` replace `collectRoutes()` and `cachedRoutes()`. They resolve a
+  `RouteFinder` or `RouteCache` from the container, so discovery and cache settings are configured there.
+- `App` no longer accepts a fallback handler in its constructor; use `setFallback()` instead.
+- Settings classes accept `null` values for their constructor arguments, applying defaults and validating non-null
+  values at runtime.
+- Settings default file paths to the Composer root package directory, read through `composer-runtime-api`.
+- Replaced `wyrihaximus/list-classes-in-directory` with `composer/class-map-generator` for route discovery.
+
+### Removed
+
+- `Joust\Locator` namespace, `RouteLocator`, and the `collectRoutes()` and `cachedRoutes()` application methods.
 
 ## [0.3.0] - 2026-10-23
 

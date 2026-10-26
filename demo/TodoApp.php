@@ -6,6 +6,8 @@ namespace Joust\Demo;
 
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
+use Joust\Finder\RouteFinder;
+use Joust\Finder\RouteFinderSettings;
 use Joust\Handler\NotFoundHandler;
 use Joust\Middleware\ParseJsonMiddleware;
 use Joust\Response\JsonResponseFactory;
@@ -28,8 +30,9 @@ final readonly class TodoApp
             Routes\CreateTodo::class => new Routes\CreateTodo($store, $json),
             Routes\CompleteTodo::class => new Routes\CompleteTodo($store, $json),
             Routes\Crash::class => new Routes\Crash(),
+            RouteFinder::class => new RouteFinder(new RouteFinderSettings(routeDir: __DIR__ . '/Routes')),
         ]);
 
-        return new App($container)->add(new ProblemMiddleware($factory, $factory))->collectRoutes(__DIR__ . '/Routes');
+        return new App($container)->add(new ProblemMiddleware($factory, $factory))->liveRouter();
     }
 }

@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/')]
+#[AsRoute(Method::Get, path: '/')]
 final readonly class Home implements RequestHandlerInterface
 {
     public function __construct(

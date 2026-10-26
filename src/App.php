@@ -32,13 +32,19 @@ final class App implements RequestHandlerInterface
     /** @var list<MiddlewareInterface> */
     private array $middleware = [];
 
-    private readonly RequestHandlerInterface $fallback;
+    private RequestHandlerInterface $fallback;
 
     public function __construct(
         private readonly ContainerInterface $container,
-        ?RequestHandlerInterface $fallback = null,
     ) {
-        $this->fallback = $fallback ?? $this->container->get(Handler\NotFoundHandler::class);
+        $this->fallback = $this->container->get(Handler\NotFoundHandler::class);
+    }
+
+    public function setFallback(RequestHandlerInterface $fallback): static
+    {
+        $this->fallback = $fallback;
+
+        return $this;
     }
 
     public function add(MiddlewareInterface $middleware): static
@@ -56,27 +62,16 @@ final class App implements RequestHandlerInterface
         return $this->add(new Middleware\LazyMiddleware($this->container, $middleware));
     }
 
-    /**
-     * @param non-empty-string $directory
-     * @param non-empty-string|null $file
-     */
-    public function collectRoutes(string $directory, ?string $file = null): static
+    public function liveRouter(): static
     {
-        $routes = new Locator\RouteLocator($directory);
-
-        if ($file !== null) {
-            $routes = new Locator\RouteCache()->write($routes, $file);
-        }
+        $routes = $this->container->get(Finder\RouteFinder::class);
 
         return $this->add(new Middleware\RouterMiddleware($this->container, $routes));
     }
 
-    /**
-     * @param non-empty-string $file
-     */
-    public function cachedRoutes(string $file): static
+    public function cachedRouter(): static
     {
-        $routes = new Locator\RouteCache()->read($file);
+        $routes = $this->container->get(Cache\RouteCache::class)->read();
 
         return $this->add(new Middleware\RouterMiddleware($this->container, $routes));
     }

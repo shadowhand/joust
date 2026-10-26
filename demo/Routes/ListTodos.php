@@ -13,7 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-#[AsRoute(Method::Get, '/todos')]
+#[AsRoute(Method::Get, path: '/todos')]
 final readonly class ListTodos implements RequestHandlerInterface
 {
     public function __construct(
