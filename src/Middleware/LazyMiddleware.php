@@ -18,7 +18,7 @@ use function Psl\Type\class_string;
  *
  * @api
  */
-final readonly class Lazy implements MiddlewareInterface
+final readonly class LazyMiddleware implements MiddlewareInterface
 {
     /**
      * @assert class-string<MiddlewareInterface> $name

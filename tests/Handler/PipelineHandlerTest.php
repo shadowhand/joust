@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Handler;
 
-use Joust\Handler\Pass;
-use Joust\Handler\Pipeline;
+use Joust\Handler\PassHandler;
+use Joust\Handler\PipelineHandler;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\Fixture\TraceMiddleware;
 use Joust\Tests\TestCase;
@@ -13,15 +13,15 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 
-#[CoversClass(Pipeline::class)]
-#[CoversClass(Pass::class)]
-final class PipelineTest extends TestCase
+#[CoversClass(PipelineHandler::class)]
+#[CoversClass(PassHandler::class)]
+final class PipelineHandlerTest extends TestCase
 {
     public function testItRunsMiddlewareInOrderBeforeTheHandler(): void
     {
         $handler = new TestHandler(new Psr17Factory());
 
-        $pipeline = new Pipeline([new TraceMiddleware('outer'), new TraceMiddleware('inner')], $handler);
+        $pipeline = new PipelineHandler([new TraceMiddleware('outer'), new TraceMiddleware('inner')], $handler);
 
         $response = $pipeline->handle(new ServerRequest('GET', '/'));
 
@@ -34,7 +34,7 @@ final class PipelineTest extends TestCase
     {
         $handler = new TestHandler(new Psr17Factory());
 
-        $response = new Pipeline([], $handler)->handle(new ServerRequest('GET', '/'));
+        $response = new PipelineHandler([], $handler)->handle(new ServerRequest('GET', '/'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotNull($handler->request);

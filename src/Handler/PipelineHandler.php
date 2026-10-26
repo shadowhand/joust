@@ -19,7 +19,7 @@ use function Psl\Vec\reverse;
  *
  * @internal
  */
-final readonly class Pipeline implements RequestHandlerInterface
+final readonly class PipelineHandler implements RequestHandlerInterface
 {
     /**
      * @assert list<MiddlewareInterface> $middleware
@@ -38,7 +38,7 @@ final readonly class Pipeline implements RequestHandlerInterface
         $handler = $this->handler;
 
         foreach (reverse($this->middleware) as $middleware) {
-            $handler = new Pass($middleware, $handler);
+            $handler = new PassHandler($middleware, $handler);
         }
 
         return $handler->handle($request);

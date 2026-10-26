@@ -16,7 +16,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  *
  * @api
  */
-final readonly class NotFound implements RequestHandlerInterface
+final readonly class NotFoundHandler implements RequestHandlerInterface
 {
     public function __construct(
         private JsonResponseFactory $jsonResponseFactory,

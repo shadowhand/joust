@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Added `Handler` suffix to request handlers.
+- Added `Middleware` suffix to request middleware.
+
 ## [0.3.0] - 2026-10-23
 
 ### Added

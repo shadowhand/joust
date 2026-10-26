@@ -6,8 +6,8 @@ namespace Joust\Demo;
 
 use Errata\Middleware\ProblemMiddleware;
 use Joust\App;
-use Joust\Handler\NotFound;
-use Joust\Middleware\ParseJsonBody;
+use Joust\Handler\NotFoundHandler;
+use Joust\Middleware\ParseJsonMiddleware;
 use Joust\Response\JsonResponseFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
@@ -20,8 +20,8 @@ final readonly class TodoApp
         $json = new JsonResponseFactory($factory, $factory);
         $container = new Container([
             JsonResponseFactory::class => $json,
-            NotFound::class => new NotFound($json),
-            ParseJsonBody::class => new ParseJsonBody($json),
+            NotFoundHandler::class => new NotFoundHandler($json),
+            ParseJsonMiddleware::class => new ParseJsonMiddleware($json),
             Routes\Home::class => new Routes\Home($factory, $factory),
             Routes\ListTodos::class => new Routes\ListTodos($store, $json),
             Routes\GetTodo::class => new Routes\GetTodo($store, $json),

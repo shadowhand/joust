@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Middleware;
 
-use Joust\Middleware\ParseJsonBody;
+use Joust\Middleware\ParseJsonMiddleware;
 use Joust\Response\JsonResponseFactory;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\TestCase;
@@ -16,8 +16,8 @@ use Psr\Http\Message\ServerRequestInterface;
 
 use function Psl\Json\decode;
 
-#[CoversClass(ParseJsonBody::class)]
-final class ParseJsonBodyTest extends TestCase
+#[CoversClass(ParseJsonMiddleware::class)]
+final class ParseJsonMiddlewareTest extends TestCase
 {
     /**
      * @return iterable<string, array{string}>
@@ -109,11 +109,11 @@ final class ParseJsonBodyTest extends TestCase
         $this->assertNull($handler->request);
     }
 
-    private function middleware(): ParseJsonBody
+    private function middleware(): ParseJsonMiddleware
     {
         $factory = new Psr17Factory();
 
-        return new ParseJsonBody(new JsonResponseFactory($factory, $factory));
+        return new ParseJsonMiddleware(new JsonResponseFactory($factory, $factory));
     }
 
     private function request(

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust\Tests\Middleware;
 
-use Joust\Middleware\Lazy;
+use Joust\Middleware\LazyMiddleware;
 use Joust\Tests\Fixture\TestContainer;
 use Joust\Tests\Fixture\TestHandler;
 use Joust\Tests\Fixture\TraceMiddleware;
@@ -14,15 +14,18 @@ use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\Attributes\CoversClass;
 use TypeError;
 
-#[CoversClass(Lazy::class)]
-final class LazyTest extends TestCase
+#[CoversClass(LazyMiddleware::class)]
+final class LazyMiddlewareTest extends TestCase
 {
     public function testItResolvesMiddlewareFromTheContainer(): void
     {
         $container = new TestContainer([TraceMiddleware::class => new TraceMiddleware('lazy')]);
         $handler = new TestHandler(new Psr17Factory());
 
-        $response = new Lazy($container, TraceMiddleware::class)->process(new ServerRequest('GET', '/'), $handler);
+        $response = new LazyMiddleware($container, TraceMiddleware::class)->process(
+            new ServerRequest('GET', '/'),
+            $handler,
+        );
 
         $this->assertSame(['lazy'], $response->getHeader('X-Trace'));
     }
@@ -34,6 +37,9 @@ final class LazyTest extends TestCase
 
         $this->expectException(TypeError::class);
 
-        new Lazy($container, TraceMiddleware::class)->process(new ServerRequest('GET', '/'), new TestHandler($factory));
+        new LazyMiddleware($container, TraceMiddleware::class)->process(
+            new ServerRequest('GET', '/'),
+            new TestHandler($factory),
+        );
     }
 }

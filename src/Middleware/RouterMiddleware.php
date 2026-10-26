@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Joust\Middleware;
 
-use Joust\Handler\Pipeline;
+use Joust\Handler\PipelineHandler;
 use Joust\RouteHandler;
 use Joust\RouteList;
 use Joust\RouteMatch;
@@ -26,7 +26,7 @@ use function Psl\Vec\map;
  *
  * @api
  */
-final readonly class Router implements MiddlewareInterface
+final readonly class RouterMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private ContainerInterface $container,
@@ -49,15 +49,15 @@ final readonly class Router implements MiddlewareInterface
 
     private function pipeline(RouteHandler $handler): RequestHandlerInterface
     {
-        return new Pipeline(map($handler->middleware, $this->lazy(...)), $this->resolve($handler));
+        return new PipelineHandler(map($handler->middleware, $this->lazy(...)), $this->resolve($handler));
     }
 
     /**
      * @param class-string<MiddlewareInterface> $name
      */
-    private function lazy(string $name): Lazy
+    private function lazy(string $name): LazyMiddleware
     {
-        return new Lazy($this->container, $name);
+        return new LazyMiddleware($this->container, $name);
     }
 
     private function resolve(RouteHandler $handler): RequestHandlerInterface
