@@ -7,6 +7,6 @@ updates:
     time: "04:00"
     timezone: "America/Chicago"
   cooldown:
-    default-days: 3
+    default-days: 7
   labels:
     - "dependencies"
