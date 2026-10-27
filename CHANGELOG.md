@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Switched route caching from PHP serialization to JSON. Regenerate caches after updating!
+
+### Added
+
+- `Route` and `RouteCollection` implement `JsonSerializable`.
+- `Route` and `RouteCollection` have `type()` methods to assist in reconstructing from JSON.
+
 ## [0.4.0] - 2026-10-26
 
 ### Added
