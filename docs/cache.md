@@ -74,8 +74,8 @@ see [Route middleware](psr-15.md#route-middleware).
 
 ## Create and read a route cache
 
-`RouteCache` materializes any `RouteList` into a `RouteCollection` and serializes it to a file; `read()` unserializes
-the file back into that collection:
+`RouteCache` materializes any `RouteList` into a `RouteCollection` and writes its routes as JSON; `read()` decodes
+the file and reconstructs the collection, including URL patterns, case sensitivity, and handler middleware:
 
 ```php
 use Joust\Cache\RouteCache;
@@ -83,7 +83,7 @@ use Joust\Cache\RouteCacheSettings;
 use Joust\Finder\RouteFinder;
 use Joust\Finder\RouteFinderSettings;
 
-$cache = new RouteCache(new RouteCacheSettings(__DIR__ . '/../var/joust-routes.php.cache'));
+$cache = new RouteCache(new RouteCacheSettings(__DIR__ . '/../var/joust-routes.json.cache'));
 
 $cache->write(new RouteFinder(new RouteFinderSettings(__DIR__ . '/../src')));
 
@@ -91,7 +91,10 @@ $cache->write(new RouteFinder(new RouteFinderSettings(__DIR__ . '/../src')));
 $routes = $cache->read();
 ```
 
-`RouteCacheSettings` defaults `cacheFile` to `var/joust-routes.php.cache` under the Composer root package.
+`RouteCacheSettings` defaults `cacheFile` to `var/joust-routes.json.cache` under the Composer root package.
+
+`Route` implements `JsonSerializable`. Use `Route::type()->coerce($data)` to reconstruct a route from decoded JSON,
+or `RouteCollection::type()->coerce($data)` for a list of routes. Both types validate the data before reconstruction.
 
 An `App` reads a cache through the `RouteCache` registered in its container. `cachedRouter()` adds a router for the
 routes in the configured cache file, and `liveRouter()` adds a router for the `RouteFinder` in the container:
@@ -105,7 +108,7 @@ use Joust\Finder\RouteFinderSettings;
 use Psr\Container\ContainerInterface;
 
 $routeFinder = new RouteFinder(new RouteFinderSettings(__DIR__ . '/../src'));
-$routeCache = new RouteCache(new RouteCacheSettings(__DIR__ . '/../var/joust-routes.php.cache'));
+$routeCache = new RouteCache(new RouteCacheSettings(__DIR__ . '/../var/joust-routes.json.cache'));
 
 // Register them in your container as RouteFinder::class and RouteCache::class.
 /** @var ContainerInterface $container */
@@ -118,7 +121,7 @@ $app->cachedRouter(); // read RouteCache::class and route using the cached route
 Use `liveRouter()` during development. To generate the cache, run the `write()` code in a build or deployment script,
 then call `cachedRouter()` at runtime.
 
-Regenerate the cache when route attributes or handler classes change (for example, as part of deployment). The cache
-is PHP-serialized data; only read cache files created and controlled by your application. For how to pass the resulting
-`RouteList` to a router, see [Applications and PSR-15 routing](psr-15.md). For manually defined routes, see
-[Routes](routes.md).
+Regenerate the cache when route attributes or handler classes change (for example, as part of deployment). Existing
+PHP-serialized caches must also be regenerated; only JSON caches are supported. Only read cache files created and
+controlled by your application. For how to pass the resulting `RouteList` to a router, see
+[Applications and PSR-15 routing](psr-15.md). For manually defined routes, see [Routes](routes.md).

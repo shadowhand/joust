@@ -17,9 +17,15 @@ use Joust\Tests\Fixture\TraceMiddleware;
 use Joust\Tests\TestCase;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Psl\Json\Exception\DecodeException;
+use Psl\Type\Exception\CoercionException;
 
+use function Psl\File\read;
+use function Psl\File\write;
 use function Psl\Filesystem\delete_file;
 use function Psl\Filesystem\is_file;
+use function Psl\Json\encode;
 use function Psl\Vec\map;
 use function Psl\Vec\sort;
 use function Psl\Vec\values;
@@ -43,6 +49,7 @@ final class RouteCacheTest extends TestCase
         $list = $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
 
         $this->assertTrue(is_file(self::CACHE));
+        $this->assertSame(encode(values($list)), read(self::CACHE));
 
         $handlers = sort(map($list, static fn(Route $route): string => $route->handler->name));
 
@@ -51,9 +58,11 @@ final class RouteCacheTest extends TestCase
 
     public function testItReadsTheRoutesFromTheCache(): void
     {
-        $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
+        $written = $this->createCache()->write(new RouteFinder(new RouteFinderSettings(self::DIRECTORY)));
 
         $list = $this->createCache()->read();
+
+        $this->assertEquals($written, $list);
 
         $handlers = sort(map($list, static fn(Route $route): string => $route->handler->name));
 
@@ -79,6 +88,37 @@ final class RouteCacheTest extends TestCase
         $this->createCache()->write(new RouteCollection());
 
         $this->assertSame([], values($this->createCache()->read()));
+        $this->assertSame('[]', read(self::CACHE));
+    }
+
+    public function testItRejectsMalformedJson(): void
+    {
+        write(self::CACHE, content: 'not JSON');
+
+        $this->expectException(DecodeException::class);
+
+        $this->createCache()->read();
+    }
+
+    #[DataProvider('invalidCaches')]
+    public function testItRejectsInvalidCacheData(string $json): void
+    {
+        write(self::CACHE, $json);
+
+        $this->expectException(CoercionException::class);
+
+        $this->createCache()->read();
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function invalidCaches(): iterable
+    {
+        yield 'null' => ['null'];
+        yield 'scalar' => ['42'];
+        yield 'non-route entry' => ['[42]'];
+        yield 'missing route fields' => ['[{}]'];
     }
 
     private function createCache(): RouteCache

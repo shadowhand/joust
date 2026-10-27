@@ -29,6 +29,6 @@ final readonly class RouteCacheSettings
     public function __construct(?string $cacheFile = null)
     {
         // @mago-format-ignore-next
-        $this->cacheFile = $cacheFile ? non_empty_string()->assert($cacheFile) : $this->rootPath('var/joust-routes.php.cache');
+        $this->cacheFile = $cacheFile ? non_empty_string()->assert($cacheFile) : $this->rootPath('var/joust-routes.json.cache');
     }
 }

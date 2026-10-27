@@ -15,7 +15,7 @@ final class RouteCacheSettingsTest extends TestCase
     {
         $settings = new RouteCacheSettings();
 
-        $this->assertStringEndsWith('/var/joust-routes.php.cache', $settings->cacheFile);
+        $this->assertStringEndsWith('/var/joust-routes.json.cache', $settings->cacheFile);
     }
 
     public function testCustomCacheFile(): void

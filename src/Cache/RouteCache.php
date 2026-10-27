@@ -10,9 +10,8 @@ use Joust\RouteList;
 use function Psl\File\read;
 use function Psl\File\write;
 use function Psl\Filesystem\create_directory_for_file;
-use function Psl\Type\instance_of;
-use function serialize;
-use function unserialize;
+use function Psl\Json\decode;
+use function Psl\Json\encode;
 
 /**
  * Reads and writes a route cache.
@@ -27,20 +26,20 @@ final readonly class RouteCache
         private RouteCacheSettings $settings = new RouteCacheSettings(),
     ) {}
 
-    public function read(): RouteList
+    public function read(): RouteCollection
     {
         $cache = read($this->settings->cacheFile);
 
-        return instance_of(RouteList::class)->assert(unserialize($cache));
+        return RouteCollection::type()->coerce(decode($cache));
     }
 
-    public function write(RouteList $routes): RouteList
+    public function write(RouteList $routes): RouteCollection
     {
         create_directory_for_file($this->settings->cacheFile);
 
         $list = new RouteCollection(...$routes);
 
-        write($this->settings->cacheFile, serialize($list));
+        write($this->settings->cacheFile, encode($list));
 
         return $list;
     }
